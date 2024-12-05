@@ -1,21 +1,37 @@
+class Day01 {
+
+    fun parseInput(input: String): Pair<List<Int>, List<Int>> {
+        val lines = input.trim().lines()
+        val left = mutableListOf<Int>()
+        val right = mutableListOf<Int>()
+
+        for (line in lines) {
+            val (l, r) = line.trim().split(Regex("\\s+")).map { it.toInt() }
+            left.add(l)
+            right.add(r)
+        }
+
+        return Pair(left, right)
+    }
+
+    fun solve(input: String): Int {
+        val (left, right) = parseInput(input)
+
+        val sortedLeft = left.sorted()
+        val sortedRight = right.sorted()
+
+        return sortedLeft.zip(sortedRight)
+            .sumOf { (a, b) -> kotlin.math.abs(a - b) }
+    }
+
+    fun main() {
+        val body = readInputBody("Day01_test")
+        val total = solve(body)
+        println("Total distance: $total")
+    }
+
+}
+
 fun main() {
-    fun part1(input: List<String>): Int {
-        return input.size
-    }
-
-    fun part2(input: List<String>): Int {
-        return input.size
-    }
-
-    // Test if implementation meets criteria from the description, like:
-    check(part1(listOf("test_input")) == 1)
-
-    // Or read a large test input from the `src/Day01_test.txt` file:
-    val testInput = readInput("Day01_test")
-    check(part1(testInput) == 1)
-
-    // Read the input from the `src/Day01.txt` file.
-    val input = readInput("Day01")
-    part1(input).println()
-    part2(input).println()
+    Day01().main()
 }
