@@ -1,7 +1,10 @@
 fun main() {
-    // sample()
     test1()
+    val body = readInputBody("Day05_test1")
+    val total = solve2(body)
+    println("Part 2 Total: $total")
 }
+
 
 fun test1() {
     val body = readInputBody("Day05_test1")
@@ -51,5 +54,24 @@ fun solve(input: String): Int {
 
     return updates
         .filter { isValidOrder(it, rules) }
+        .sumOf { update -> update[update.size / 2] }
+}
+
+fun sortByRules(update: List<Int>, rules: Set<Rule>): List<Int> {
+    return update.sortedWith { a, b ->
+        when {
+            rules.any { it.before == b && it.after == a } -> -1
+            rules.any { it.before == a && it.after == b } -> 1
+            else -> 0
+        }
+    }
+}
+
+fun solve2(input: String): Int {
+    val (rules, updates) = parseInput(input)
+
+    return updates
+        .filter { !isValidOrder(it, rules) }
+        .map { sortByRules(it, rules) }
         .sumOf { update -> update[update.size / 2] }
 }
