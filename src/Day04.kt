@@ -1,9 +1,62 @@
-val search = "XMAS"
+var search = "MAS"
 val rexSearch = search.toRegex()
 
 fun main() {
+    wordFinder() //star 1 //->2414
+    patternFinder() //star 2  //->1871
+}
+fun patternFinder() {
+    search = "MAS"
+    val lines = readInputMatrix("Day04_test")
+    val n = lines.size
+    val m = lines[0].size
+    var total=0;
+    lines.forEachIndexed { iline, line ->
+        line
+            .forEachIndexed { pos, c ->
+                if (c=='A')
+                    total+=getPatternDetected(iline, pos, lines, n, m)
+            }
+    }
+    println("total=$total")
+}
+
+fun getPatternDetected(iline: Int, pos: Int, lines: List<List<Char>>, n: Int, m: Int): Int {
+    //border detection
+    if (iline<1 || pos<1 || iline>n-2 || pos>m-2)
+        return 0;
+
+    val matrix = (iline-1 until iline+2).map { x ->
+        (pos - 1 until pos +2).map { y ->
+            lines[x][y]
+        }.joinToString("")
+    }
+
+    val diags = getDiagonals(matrix);
+    val totalDiag = countDiagonals(diags);
+
+    val diags2 = getDiagonals2(matrix);
+    val totalDiag2 = countDiagonals(diags2);
+
+    val total=totalDiag + totalDiag2
+
+    if (total>1){
+        println("found $total @ line $iline, pos $pos: ${lines[iline].joinToString("")}")
+        printLines(matrix)
+        return 1
+    }
+    return 0
+}
+
+fun countDiagonals(diags: List<String>): Int {
+    val lineDiag = diags.joinToString(" ")
+    return countRev(lineDiag)
+}
+
+fun wordFinder() {
+    search = "XMAS"
     //val lines = readInput("Day04_test") //-> 18
-    val lines = readInput("Day04_test1") //->2414
+    val lines = readInput("Day04_test1")
     val lineH = lines.joinToString(" ")
     val totalH = countRev(lineH)
 
