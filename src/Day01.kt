@@ -24,10 +24,20 @@ class Day01 {
             .sumOf { (a, b) -> kotlin.math.abs(a - b) }
     }
 
+    fun solve2(input: String): Int {
+        val (left, right) = parseInput(input)
+
+        return left.sumOf { num ->
+            val frequency = right.count { it == num }
+            num * frequency
+        }
+    }
     fun main() {
         val body = readInputBody("Day01_test")
         val total = solve(body)
         println("Total distance: $total")
+        val similarity = solve2(body)
+        println("Similarity score: $similarity")
     }
 
 }
