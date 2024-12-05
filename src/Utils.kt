@@ -8,6 +8,8 @@ import kotlin.io.path.readText
  */
 fun readInput(name: String) = Path("src/$name.txt").readText().trim().lines()
 
+fun readInputMatrix(name: String) = Path("src/$name.txt").readText().trim().lines().map { it.toCharArray().toList() }
+
 /**
  * Converts string to md5 hash.
  */
@@ -19,3 +21,11 @@ fun String.md5() = BigInteger(1, MessageDigest.getInstance("MD5").digest(toByteA
  * The cleaner shorthand for printing output.
  */
 fun Any?.println() = println(this)
+
+fun printMatrix(matrix: List<List<Char>>) {
+    matrix.joinToString(""){ it.joinToString("")+"\n" }.println()
+}
+
+fun printLines(matrix: List<String>) {
+    matrix.joinToString("\n").println()
+}
