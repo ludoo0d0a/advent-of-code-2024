@@ -1,4 +1,38 @@
-
+/**
+ * Explanation of Day07.kt:
+ *
+ * This code solves a mathematical equation puzzle. Here's how it works:
+ *
+ * Purpose: The code tries to find valid mathematical equations where you can insert operators (+, *, or concatenation |) between numbers to reach a target value.
+ *
+ * Inputs:
+ *
+ * It reads input from a file named "Day07_test1"
+ * Each line of input contains two parts:
+ * A target number (test value)
+ * A list of numbers separated by spaces
+ * Outputs:
+ * It outputs the sum of all test values where valid equations can be formed
+ * If no valid equation can be formed for a test value, it contributes 0 to the sum
+ * How it works: The code processes each line through these steps:
+ * Splits each input line into a test value and list of numbers
+ * Tries different combinations of operators (+, *, |) between the numbers
+ * Checks if any combination produces the target test value
+ * If a valid combination is found, adds that test value to the running total
+ * Key Logic:
+ * The parseEquation function breaks down each input line into an Equation object
+ * evaluateExpression calculates the result of applying operators to numbers:
+ * '+' adds numbers
+ * '*' multiplies numbers
+ * '|' concatenates numbers (joins them as strings)
+ * findValidEquations tries all possible operator combinations until it finds one that works or exhausts all possibilities
+ * For example, if the input is "123: 1 2 3", the code would try combinations like:
+ *
+ * 1 + 2 + 3
+ * 1 * 2 * 3
+ * 1 | 2 | 3 (joining numbers: 123) Until it finds a combination that equals 123 or determines none exist.
+ * The code uses a systematic approach to try all possibilities and keeps track of which equations are valid, ultimately summing up the test values of all valid equations to produce the final answer.
+ */
 class Day07 {
 
     val DEBUG=false;
