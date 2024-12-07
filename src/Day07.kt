@@ -26,6 +26,10 @@ class Day07 {
             when (operators[i]) {
                 '+' -> result += numbers[i + 1]
                 '*' -> result *= numbers[i + 1]
+                '|' -> {
+                    // Convert current result and next number to strings, concatenate, then back to Long
+                    result = (result.toString() + numbers[i + 1].toString()).toLong()
+                }
             }
         }
         return result
@@ -33,7 +37,8 @@ class Day07 {
 
     fun findValidEquations(input: String): Long {
         val equations = input.lines().map { parseEquation(it) }
-        val possibleOperators = listOf('+', '*')
+        //val possibleOperators = listOf('+', '*')
+        val possibleOperators = listOf('+', '*', '|') // Using '|' to represent '||'
 
         return equations.sumOf { equation ->
             val operatorCount = equation.numbers.size - 1
