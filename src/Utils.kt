@@ -31,3 +31,4 @@ fun printMatrix(matrix: List<List<Char>>) {
 fun printLines(matrix: List<String>) {
     matrix.joinToString("\n").println()
 }
+

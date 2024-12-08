@@ -38,7 +38,8 @@ class Day08 {
     val DEBUG=false;
 
     fun main() {
-        val input = readInput("Day08_test")
+        //val input = readInput("Day08_test")
+        val input = readInput("Day08_test1")
         val result = findAntinodes(input)
         println("Number of antinodes: $result")
     }
@@ -53,20 +54,47 @@ class Day08 {
         // 3. Find all antinodes
         val antinodes = mutableSetOf<Point>()
 
+        if (DEBUG) {
+            println("Antennas:")
+            antennas.forEach { println("${it.frequency} at (${it.position.x}, ${it.position.y})") }
+
+            // Debug print grouped antennas
+            println("\nGrouped by frequency:")
+            antennasByFreq.forEach { (freq, list) ->
+                println("$freq: ${list.size} antennas")
+            }
+        }
+
         // For each frequency group
-        antennasByFreq.forEach { (_, sameFreqAntennas) ->
+        antennasByFreq.forEach { (freq, sameFreqAntennas) ->
             // Check each pair of antennas with same frequency
             for (i in sameFreqAntennas.indices) {
                 for (j in i + 1 until sameFreqAntennas.size) {
                     val ant1 = sameFreqAntennas[i]
                     val ant2 = sameFreqAntennas[j]
 
+                    // Debug print pairs being checked
+                    dbg("\nChecking pair: ${ant1.position} and ${ant2.position} with freq $freq")
+
                     // Calculate antinodes for this pair
                     findAntinodesForPair(ant1, ant2, input[0].length, input.size)
-                        .forEach { antinodes.add(it) }
+                        .forEach {
+                            // Debug print found antinodes
+                            println("Found antinode: $it")
+                            antinodes.add(it)
+
+                            dbg(visualizeAntinodes(input, antinodes))
+                            dbg("--")
+                        }
                 }
             }
         }
+
+        // Before returning antinodes.size, add:
+         if (DEBUG) {
+             dbg("\nFinal map with antinodes (#):")
+             dbg(visualizeAntinodes(input, antinodes))
+         }
 
         return antinodes.size
     }
@@ -87,25 +115,29 @@ class Day08 {
     private fun findAntinodesForPair(ant1: Antenna, ant2: Antenna, width: Int, height: Int): List<Point> {
         val antinodes = mutableListOf<Point>()
 
-        // Calculate distance between antennas
+        // Get vector from ant1 to ant2
         val dx = ant2.position.x - ant1.position.x
         val dy = ant2.position.y - ant1.position.y
-        val dist = Math.sqrt((dx * dx + dy * dy).toDouble())
 
-        // Find points that are half the distance from one antenna
-        // and double the distance from the other
-        for (y in 0 until height) {
-            for (x in 0 until width) {
-                val p = Point(x, y)
-                val d1 = distance(p, ant1.position)
-                val d2 = distance(p, ant2.position)
+        // Calculate opposite points
+        // For ant1: add 2x the vector
+        val antinode1X = ant1.position.x + (2 * dx)
+        val antinode1Y = ant1.position.y + (2 * dy)
 
-                // Check if this point forms an antinode (one distance is twice the other)
-                if ((Math.abs(d1 - 2 * d2) < 0.0001) || (Math.abs(d2 - 2 * d1) < 0.0001)) {
-                    antinodes.add(p)
-                }
-            }
+        // For ant2: subtract 2x the vector
+        val antinode2X = ant2.position.x - (2 * dx)
+        val antinode2Y = ant2.position.y - (2 * dy)
+
+        // Add points if they're within bounds
+        if (antinode1X in 0 until width && antinode1Y in 0 until height) {
+            antinodes.add(Point(antinode1X, antinode1Y))
         }
+
+        if (antinode2X in 0 until width && antinode2Y in 0 until height) {
+            antinodes.add(Point(antinode2X, antinode2Y))
+        }
+
+        dbg("${antinodes.size} antinodes: $antinodes")
 
         return antinodes
     }
@@ -116,6 +148,23 @@ class Day08 {
         return Math.sqrt((dx * dx + dy * dy).toDouble())
     }
 
+    fun visualizeAntinodes(input: List<String>, antinodes: Set<Point>): String {
+        val result = input.map { it.toCharArray() }.toTypedArray()
+
+        // Mark antinodes with '#'
+        antinodes.forEach { point ->
+            if (point.y in result.indices && point.x in result[0].indices) {
+                result[point.y][point.x] = if (result[point.y][point.x] == '.') '#' else result[point.y][point.x]
+            }
+        }
+
+        return result.joinToString("\n") { it.joinToString("") }
+    }
+
+    fun dbg(s: String) {
+        if (DEBUG)
+            println(s)
+    }
 }
 
 fun main() {
