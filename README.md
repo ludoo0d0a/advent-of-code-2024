@@ -23,3 +23,8 @@ If you're stuck with Kotlin-specific questions or anything related to this templ
 [kotlin]: https://kotlinlang.org
 [slack]: https://surveys.jetbrains.com/s3/kotlin-slack-sign-up
 [template]: https://github.com/kotlin-hands-on/advent-of-code-kotlin-template
+
+
+
+TODO
+write a script , schedule it every day at 6 PM, to query puzzle of the day from url 'https://adventofcode.com/2024/day/XX' where XX is the current day of the month. Parse html to extract text only of first puzzle located in first article tag, under main tag. create a file aside from the content of url https://adventofcode.com/2024/day/XX/input where XX is the current day of the month. The script should query Cody to solve problem in Kotlin
