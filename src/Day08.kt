@@ -35,13 +35,18 @@ class Day08 {
     data class Point(val x: Int, val y: Int)
     data class Antenna(val position: Point, val frequency: Char)
 
-    val DEBUG=false;
+    val DEBUG=true;
 
     fun main() {
-        //val input = readInput("Day08_test")
-        val input = readInput("Day08_test1")
+        val input = readInput("Day08_test1")   // BIG -> 966 not
+
+        //val input = readInput("Day08_test") // ->34
+        //val input = readInput("Day08_test2") // ->9
         val result = findAntinodes(input)
         println("Number of antinodes: $result")
+
+        val result2 = findAntinodes(input)
+        println("star2: Number of antinodes: $result")
     }
 
     fun findAntinodes(input: List<String>): Int {
@@ -77,15 +82,24 @@ class Day08 {
                     dbg("\nChecking pair: ${ant1.position} and ${ant2.position} with freq $freq")
 
                     // Calculate antinodes for this pair
-                    findAntinodesForPair(ant1, ant2, input[0].length, input.size)
-                        .forEach {
-                            // Debug print found antinodes
-                            println("Found antinode: $it")
-                            antinodes.add(it)
+                    val foundAntinodes = findCollinearAntinodes(ant1, ant2, input[0].length, input.size)
 
-                            dbg(visualizeAntinodes(input, antinodes))
+                    if (DEBUG) {
+                        dbg("Already found ${antinodes.size} antinodes:")
+                        dbg("Found ${foundAntinodes.size} new antinodes:")
+                        foundAntinodes.forEach {
+                            // Debug print found antinodes
+                            antinodes.add(it)
+                            dbg("   Found antinode: $it")
+                            dbg(visualizeAntinodes(input, antinodes, ant1, ant2))
                             dbg("--")
                         }
+                    }else{
+                        antinodes.addAll(foundAntinodes)
+                    }
+
+
+
                 }
             }
         }
@@ -93,7 +107,7 @@ class Day08 {
         // Before returning antinodes.size, add:
          if (DEBUG) {
              dbg("\nFinal map with antinodes (#):")
-             dbg(visualizeAntinodes(input, antinodes))
+             dbg(visualizeAntinodes(input, antinodes, null, null))
          }
 
         return antinodes.size
@@ -111,35 +125,36 @@ class Day08 {
         }
         return antennas
     }
-
-    private fun findAntinodesForPair(ant1: Antenna, ant2: Antenna, width: Int, height: Int): List<Point> {
-        val antinodes = mutableListOf<Point>()
-
-        // Get vector from ant1 to ant2
+    fun findCollinearAntinodes(ant1: Antenna, ant2: Antenna, width: Int, height: Int): Set<Point> {
+        val antinodes = mutableSetOf<Point>()
         val dx = ant2.position.x - ant1.position.x
         val dy = ant2.position.y - ant1.position.y
+        // Map is bigger, multiplier is bigger
+        var multiplier = -40
+        while (multiplier <= 40) {
+            val x = ant1.position.x + (dx * multiplier)
+            val y = ant1.position.y + (dy * multiplier)
 
-        // Calculate opposite points
-        // For ant1: add 2x the vector
-        val antinode1X = ant1.position.x + (2 * dx)
-        val antinode1Y = ant1.position.y + (2 * dy)
-
-        // For ant2: subtract 2x the vector
-        val antinode2X = ant2.position.x - (2 * dx)
-        val antinode2Y = ant2.position.y - (2 * dy)
-
-        // Add points if they're within bounds
-        if (antinode1X in 0 until width && antinode1Y in 0 until height) {
-            antinodes.add(Point(antinode1X, antinode1Y))
+            val point = Point(x, y)
+            if (isInBounds(point, width, height)) {
+                antinodes.add(point)
+            }
+            multiplier++
         }
-
-        if (antinode2X in 0 until width && antinode2Y in 0 until height) {
-            antinodes.add(Point(antinode2X, antinode2Y))
-        }
-
-        dbg("${antinodes.size} antinodes: $antinodes")
 
         return antinodes
+    }
+
+    private fun isInBounds(point: Point, width: Int, height: Int): Boolean {
+        return point.x >= 0 && point.x < width && point.y >= 0 && point.y < height
+    }
+    private fun samePoint(point: Point, ant: Antenna): Boolean {
+        return point.x==ant.position.x && point.y==ant.position.y
+    }
+
+    // Helper function to check if three points are collinear
+    private fun isCollinear(p1: Point, p2: Point, p3: Point): Boolean {
+        return (p2.y - p1.y) * (p3.x - p2.x) == (p3.y - p2.y) * (p2.x - p1.x)
     }
 
     private fun distance(p1: Point, p2: Point): Double {
@@ -148,14 +163,24 @@ class Day08 {
         return Math.sqrt((dx * dx + dy * dy).toDouble())
     }
 
-    fun visualizeAntinodes(input: List<String>, antinodes: Set<Point>): String {
+    fun visualizeAntinodes(input: List<String>, antinodes: Set<Point>, ant1: Antenna? , ant2: Antenna?): String {
         val result = input.map { it.toCharArray() }.toTypedArray()
 
         // Mark antinodes with '#'
         antinodes.forEach { point ->
             if (point.y in result.indices && point.x in result[0].indices) {
-                result[point.y][point.x] = if (result[point.y][point.x] == '.') '#' else result[point.y][point.x]
+                var value = result[point.y][point.x]
+                if (value == '.') {
+                    value = '#'
+                }else {
+                    value = '/'  //antenna AND antinode
+                }
+                result[point.y][point.x] = value
             }
+        }
+        if (ant1!=null && ant2!=null) {
+            result[ant1.position.y][ant1.position.x] = '1'
+            result[ant2.position.y][ant2.position.x] = '2'
         }
 
         return result.joinToString("\n") { it.joinToString("") }
