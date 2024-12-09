@@ -2,6 +2,7 @@ import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import io.ktor.http.*
 import org.jsoup.Jsoup
 import java.io.File
 import java.time.LocalDate
@@ -9,7 +10,6 @@ import kotlinx.coroutines.*
 import java.util.*
 import java.io.IOException
 import java.time.LocalDateTime
-import java.io.File
 
 val session_cookie = System.getenv("SESSION_COOKIE")
 val cody_endpoint = System.getenv("SRC_ENDPOINT")
@@ -39,12 +39,12 @@ suspend fun fetchPuzzleAndInput(day: Int, star: Int = 1) {
         val document = Jsoup.parse(text)
         val article = document.select("main > article").get(star)
         val puzzleContent = article?.text()?.trim() ?: "Puzzle content not found."
-        val sample = article?.select("pre > code").first()?.text()?.trim() ?: "Sample content not found."
+        val sample = article?.select("pre > code")?.first()?.text()?.trim() ?: "Sample content not found."
         val title = puzzleContent.substringBefore(" --- ", "").substringAfter("--- ", "")
 
-        val content1 = puzzleContent.substringBefore(" --- ", "")
+        val content = puzzleContent.substringBefore(" --- ", "")
         // Save the puzzle content to a file
-        File("$path/Day${dayPad}_star${star}.txt").writeText(content1)
+        File("$path/Day${dayPad}_star${star}.txt").writeText(content)
         File("$path/Day${dayPad}_star${star}_sample.txt").writeText(sample)
 
         val kotlinCode = """
@@ -88,19 +88,20 @@ fun main() {
 
         // request Cody star 1
         authCody()
-        runCody(content1)
+        runCody(content)
         // execute kotlin program
-        val result1 = runProgram1("Day$dayPad")
+        val result1 = runProgram(dayPad)
         val total = result1.substringBefore(":", "").trim()
         //submit result1
-        val submissionResult = client.post(postUrl+star) {
+        val submissionResult = client.post(postUrl + star) {
             headers {
                 append("cookie", "session=$session_cookie")
             }
-            body { "total=$total" }
+            contentType(ContentType.Text.Html)
+            setBody("total=$total")
         }
-        //chekc submission Result
-        val ok = submissionResult.contains("You're right")
+        //check submission Result
+        val ok = submissionResult.bodyAsText().contains("You're right")
         println("Submission day:$dayPad, star:$star total:$total = $submissionResult >> OK=$ok" )
 
     } catch (e: IOException) {
@@ -109,7 +110,6 @@ fun main() {
         client.close()
     }
 }
-
 // Function to run the task at 6 PM every day
 fun scheduleDailyTask() {
     val scheduler = Timer()
@@ -148,7 +148,7 @@ fun runToday(){
     runDay(currentDay)
 }
 
-fun listContextFiles(path: String=".") {
+fun listContextFiles(path: String="."): String {
     val currentDir = File(path)
     return currentDir.walkTopDown()
         .filter { it.isFile }
@@ -157,9 +157,13 @@ fun listContextFiles(path: String=".") {
         .joinToString(",")
 }
 
-fun authCody(): String {
+fun authCody(): Boolean {
     val command = mutableListOf("cody", "auth", "login")
-    return execute(command)
+    val r =  execute(command)
+    val auth = r.contains("Authenticated as ")
+    if (!auth)
+        throw Exception("Cody auth failed")
+    return auth
 }
 /*
 cody auth login
@@ -187,8 +191,8 @@ fun execute(command: List<String>): String {
     println(output)
     return output
 }
-fun runProgram(className: String){
-    execute("gradle run")
+fun runProgram(dayPad: String): String{
+    return execute("gradle run --args=$dayPad")
     // Class.forName(className).newInstance()
 }
 fun isNumeric(toCheck: String): Boolean {
@@ -202,9 +206,8 @@ fun main(args: Array<String>) {
         runToday()
     }else if ("--daemon".equals(arg)){
         scheduleDailyTask()
-    }else if (args.size>1 && "--day".equals(args[0]) && isNumeric(args[1]) ){{
+    }else if (args.size>1 && "--day".equals(args[0]) && isNumeric(args[1]) ){
         runDay(args[1].toInt())
     }
-
 }
 
