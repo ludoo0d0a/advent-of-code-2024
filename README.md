@@ -30,7 +30,7 @@ If you're stuck with Kotlin-specific questions or anything related to this templ
 
 > npm install -g @sourcegraph/cody
 
-´´´
+```bash
 export SRC_ENDPOINT=ENDPOINT
 export SRC_ACCESS_TOKEN=ACCESS_TOKEN
 cody auth login
@@ -38,4 +38,4 @@ cody auth login
 cody auth whoami
 
 cody chat --context-file src/Day01.kt,src/Day02.kt,... -m 'write kotlin code for this problem: ...'
-´´´
+```
