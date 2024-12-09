@@ -84,10 +84,15 @@ fun main() {
         File("$path/Day${dayPad}_input.txt").writeText(inputData.bodyAsText().trim())
         println("Puzzle and input for day $day fetched and saved successfully.")
 
+        // request Cody star 1
         authCody()
         runCody(content1)
-
-        runProgram1("Day$dayPad")
+        // execute kotlin program
+        val result1 = runProgram1("Day$dayPad")
+        val total = result1.substringBefore(":", "").trim()
+        //submit result1
+        client.post(inputUrl) {
+        
         
     } catch (e: IOException) {
         println("Error fetching data: ${e.message}")
@@ -121,13 +126,17 @@ fun scheduleDailyTask() {
     scheduler.scheduleAtFixedRate(task, delayMillis, 24 * 60 * 60 * 1000)  // Repeat daily
 }
 
-fun runToday(){
-    val currentDay = LocalDate.now().dayOfMonth
-    println("Running task for Day $currentDay")
+fun runDay(day: Int){
+    println("Running task for Day $day")
 
     runBlocking {
-        fetchPuzzleAndInput(currentDay)
+        fetchPuzzleAndInput(day)
     }
+}
+
+fun runToday(){
+    val currentDay = LocalDate.now().dayOfMonth
+    runDay(currentDay)
 }
 
 fun listContextFiles(path: String=".") {
@@ -173,15 +182,19 @@ fun runProgram(className: String){
     execute("gradle run")
     // Class.forName(className).newInstance()
 }
-
+fun isNumeric(toCheck: String): Boolean {
+    return toCheck.toDoubleOrNull() != null
+}
 fun main(args: Array<String>) {
     println("Starting Advent of Code puzzle fetcher...")
 
     val arg = args.contentToString();
     if (arg.isBlank()){
-        scheduleDailyTask()
-    }else{
         runToday()
+    }else if ("--daemon".equals(arg)){
+        scheduleDailyTask()
+    }else if (args.size>1 && "--day".equals(args[0]) && isNumeric(args[1]) ){{
+        runDay(args[1].toInt())
     }
 
 }
