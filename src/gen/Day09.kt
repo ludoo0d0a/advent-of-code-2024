@@ -112,39 +112,56 @@ class Day09 {
         return calculateChecksum(compactedState)
     }
 
-    private fun compactFilesWholeMove(state: DiskState): DiskState {
+    private  fun compactFilesWholeMove(state: DiskState): DiskState {
         val blocks = state.blocks.toMutableList()
         val fileIds = state.filePositions.keys.sortedDescending()
 
+        // Create index of empty spaces: Map<Length, List<StartPosition>>
+        val emptySpaces = mutableMapOf<Int, MutableList<Int>>()
+        var currentLength = 0
+        var startPos = -1
+
+        blocks.forEachIndexed { index, block ->
+            if (block == -1) {
+                if (startPos == -1) startPos = index
+                currentLength++
+                if (index == blocks.lastIndex) {
+                    emptySpaces.getOrPut(currentLength) { mutableListOf() }.add(startPos)
+                }
+            } else {
+                if (currentLength > 0) {
+                    emptySpaces.getOrPut(currentLength) { mutableListOf() }.add(startPos)
+                    currentLength = 0
+                    startPos = -1
+                }
+            }
+        }
+
         for (fileId in fileIds) {
+            println("$fileId/${fileIds.size}")
+
             val filePositions = state.filePositions[fileId] ?: continue
             val fileSize = filePositions.size
 
-            // Find leftmost suitable free space
-            var currentPos = 0
-            while (currentPos < blocks.size) {
-                // Skip non-free space
-                if (blocks[currentPos] != -1) {
-                    currentPos++
-                    continue
+            // Find suitable empty space
+            val suitableSpaces = emptySpaces.entries
+                .filter { it.key >= fileSize }
+                .flatMap { it.value }
+                .sorted()
+
+            val originalStart = filePositions.first()
+            val newPos = suitableSpaces.firstOrNull { it < originalStart }
+
+            if (newPos != null) {
+                // Remove file from original position
+                filePositions.forEach { pos -> blocks[pos] = -1 }
+                // Place file in new position
+                repeat(fileSize) { offset ->
+                    blocks[newPos + offset] = fileId
                 }
 
-                // Check if we have enough contiguous free space
-                val freeSpace = blocks.drop(currentPos).takeWhile { it == -1 }.count()
-                if (freeSpace >= fileSize) {
-                    // Move the whole file if it's to the left of current position
-                    val originalStart = filePositions.first()
-                    if (originalStart > currentPos) {
-                        // Remove file from original position
-                        filePositions.forEach { pos -> blocks[pos] = -1 }
-                        // Place file in new position
-                        repeat(fileSize) { offset ->
-                            blocks[currentPos + offset] = fileId
-                        }
-                    }
-                    break
-                }
-                currentPos++
+                // Update empty spaces index
+                updateEmptySpaces(emptySpaces, newPos, originalStart, fileSize, blocks)
             }
 
             if (DEBUG) {
@@ -162,15 +179,50 @@ class Day09 {
         )
     }
 
+    fun updateEmptySpaces(
+        emptySpaces: MutableMap<Int, MutableList<Int>>,
+        newPos: Int,
+        oldPos: Int,
+        fileSize: Int,
+        blocks: List<Int>
+    ) {
+        // Recalculate empty spaces around the affected areas
+        var start = -1
+        var length = 0
+
+        // Clear old entries
+        emptySpaces.clear()
+
+        // Rebuild index
+        blocks.forEachIndexed { index, block ->
+            if (block == -1) {
+                if (start == -1) start = index
+                length++
+                if (index == blocks.lastIndex && length > 0) {
+                    emptySpaces.getOrPut(length) { mutableListOf() }.add(start)
+                }
+            } else {
+                if (length > 0) {
+                    emptySpaces.getOrPut(length) { mutableListOf() }.add(start)
+                    length = 0
+                    start = -1
+                }
+            }
+        }
+    }
+
 
     fun main() {
-        //val input = readInputBody("gen/Day09_sample") // 1928
-        val input = readInputBody("gen/Day09_input")
-        //val result = solve(input)
-        //println("Filesystem checksum: $result")
+//        val sample = readInputBody("Day09_sample")
+//        val result1 = solve(sample)
+//        println("Filesystem checksum sample1: $result1")  // 1928
+//        val result2 = solve2(sample) //2858
+//        println("Filesystem checksum sample2: $result2")
 
-        val result2 = solve2(input)
-        println("Filesystem checksum2: $result2")
+        val input = readInputBody("Day09_input")
+        val result = solve2(input)
+        println("Filesystem checksum 2: $result")
+
     }
 
     fun dbg(s: String) {
