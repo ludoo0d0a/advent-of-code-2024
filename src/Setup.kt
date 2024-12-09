@@ -97,21 +97,23 @@ fun main() {
         val answer = runCody(content)
 
         File("${path}Day${dayPad}_star${star}_answer.txt").writeText(answer)
+        println("Answer saved for Day${dayPad} star$star")
 
-        // execute kotlin program
-        val result1 = runProgram(dayPad)
-        val total = result1.substringBefore(":", "").trim()
-        //submit result1
-        val submissionResult = client.post(postUrl + star) {
-            headers {
-                append("cookie", "session=$session_cookie")
-            }
-            contentType(ContentType.Text.Html)
-            setBody("total=$total")
-        }
-        //check submission Result
-        val ok = submissionResult.bodyAsText().contains("You're right")
-        println("Submission day:$dayPad, star:$star total:$total = $submissionResult >> OK=$ok" )
+//        // execute kotlin program
+//        val result1 = runProgram(dayPad)
+//        val total = result1.substringBefore(":", "").trim()
+
+//        //submit result1
+//        val submissionResult = client.post(postUrl + star) {
+//            headers {
+//                append("cookie", "session=$session_cookie")
+//            }
+//            contentType(ContentType.Text.Html)
+//            setBody("total=$total")
+//        }
+//        //check submission Result
+//        val ok = submissionResult.bodyAsText().contains("You're right")
+//        println("Submission day:$dayPad, star:$star total:$total = $submissionResult >> OK=$ok" )
 
     } catch (e: IOException) {
         println("Error fetching data: ${e.message}")
