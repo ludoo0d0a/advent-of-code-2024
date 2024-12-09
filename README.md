@@ -53,10 +53,10 @@ $MVN_HOME\org\jetbrains\kotlin\kotlin-stdlib\2.0.21\kotlin-stdlib-2.0.21.jar;
 $MVN_HOME\org\jetbrains\annotations\13.0\annotations-13.0.jar;
 $MVN_HOME\org\jetbrains\kotlin\kotlin-stdlib-jdk8\2.0.21\kotlin-stdlib-jdk8-2.0.21.jar;
 $MVN_HOME\org\jetbrains\kotlin\kotlin-stdlib-jdk7\2.0.21\kotlin-stdlib-jdk7-2.0.21.jar 
-Day01Kt
+Day01
 ```
 
 or
 ```
-gradle run
+gradle run --args='Day01'
 ```
