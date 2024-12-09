@@ -105,7 +105,7 @@ fun scheduleDailyTask() {
 
     // Set the schedule: Every day at 6 AM
     val now = LocalDateTime.now()
-    val target = now.withHour(6).withMinute(0).withSecond(0)
+    val target = now.withHour(6).withMinute(1).withSecond(0)
     val nextRun = if (target.isAfter(now)) {
         target
     } else {
