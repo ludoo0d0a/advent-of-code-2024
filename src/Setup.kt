@@ -9,10 +9,12 @@ import kotlinx.coroutines.*
 import java.util.*
 import java.io.IOException
 import java.time.LocalDateTime
-
+import java.io.File
 
 val session_cookie = System.getenv("SESSION_COOKIE")
-val path = "src/gen"
+val cody_endpoint = System.getenv("SRC_ENDPOINT")
+val cody_accesstoken = System.getenv("SRC_ACCESS_TOKEN")
+val path = "src"
 
 // Function to fetch the puzzle and input for the current day
 suspend fun fetchPuzzleAndInput(day: Int) {
@@ -36,12 +38,12 @@ suspend fun fetchPuzzleAndInput(day: Int) {
         val document = Jsoup.parse(text)
         val puzzleContent = document.select("main > article").first()?.text()?.trim() ?: "Puzzle content not found."
         val sample = document.select("main > article > pre > code").first()?.text()?.trim() ?: "Sample content not found."
-
-        // Save the puzzle content to a file
-        File("$path/Day${dayPad}.txt").writeText(puzzleContent)
-        File("$path/Day${dayPad}_sample.txt").writeText(sample)
-
         val title = puzzleContent.substringBefore(" --- ", "").substringAfter("--- ", "")
+
+        val content1 = puzzleContent.substringBefore(" --- ", "")
+        // Save the puzzle content to a file
+        File("$path/Day${dayPad}.txt").writeText(content1)
+        File("$path/Day${dayPad}_sample.txt").writeText(sample)
 
         val kotlinCode = """
 /*
@@ -71,8 +73,6 @@ fun main() {
 """
         File("$path/Day${dayPad}.kt").writeText(kotlinCode)
 
-
-
         // Fetch the puzzle input
         val inputData = client.get(inputUrl) {
             headers {
@@ -84,6 +84,9 @@ fun main() {
         File("$path/Day${dayPad}_input.txt").writeText(inputData.bodyAsText().trim())
         println("Puzzle and input for day $day fetched and saved successfully.")
 
+        authCody()
+        runCody(content1)
+        
     } catch (e: IOException) {
         println("Error fetching data: ${e.message}")
     } finally {
@@ -123,6 +126,43 @@ fun runToday(){
     runBlocking {
         fetchPuzzleAndInput(currentDay)
     }
+}
+
+fun listContextFiles(path: String=".") {
+    val currentDir = File(path)
+    return currentDir.walkTopDown()
+        .filter { it.isFile }
+        .filter { !it.name.endsWith(".txt") }
+        .map { it.relativeTo(currentDir).path }
+        .joinToString(",")
+}
+
+fun authCody(): String {
+    val command = mutableListOf("cody", "auth", "login")
+    return execute(command)
+}
+/*
+cody auth login
+cody auth whoami
+cody chat --context-file src/Day01.kt,src/Day02.kt,... -m 'Are there code smells in this file?'
+*/
+fun runCody(prompt: String): String {
+    val fileList = listContextFiles()
+    val command = mutableListOf("cody", "chat", "--context-file", fileList, "-m", prompt)
+    return execute(command)
+}
+fun execute(command: List<String>): String {
+    println("> $command")
+    val process = ProcessBuilder(command)
+        .redirectOutput(ProcessBuilder.Redirect.PIPE)
+        .start()
+        
+    val output = process.inputStream.bufferedReader().readText()
+    process.waitFor()
+    
+    println("Command output:")
+    println(output)
+    return output
 }
 
 fun main() {
