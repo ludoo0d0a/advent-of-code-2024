@@ -41,6 +41,7 @@ cody chat --context-file src/Day01.kt,src/Day02.kt,... -m 'write kotlin code for
 ```
 
 To run : 
+```
 export OUTPUT_DIR=.\out\production\advent
 export USER_HOME=~
 export MVN_HOME=$USER_HOME\.m2\repository
@@ -53,3 +54,4 @@ $MVN_HOME\org\jetbrains\annotations\13.0\annotations-13.0.jar;
 $MVN_HOME\org\jetbrains\kotlin\kotlin-stdlib-jdk8\2.0.21\kotlin-stdlib-jdk8-2.0.21.jar;
 $MVN_HOME\org\jetbrains\kotlin\kotlin-stdlib-jdk7\2.0.21\kotlin-stdlib-jdk7-2.0.21.jar 
 Day01Kt
+```
