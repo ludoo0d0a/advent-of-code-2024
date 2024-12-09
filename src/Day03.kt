@@ -1,4 +1,5 @@
-fun main() {
+class Day03(){
+    fun main() {
 
     val testInputs = readInput("Day03_test")
     println("File has ${testInputs.size} lines")
@@ -19,5 +20,9 @@ fun main() {
     }
 
     println("total=$total")
+  }
+}
 
+fun main() {
+     Day03().main()
 }
