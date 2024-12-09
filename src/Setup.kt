@@ -3,18 +3,21 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import kotlinx.coroutines.runBlocking
 import org.jsoup.Jsoup
 import java.io.File
-import java.time.LocalDate
-import kotlinx.coroutines.*
-import java.util.*
 import java.io.IOException
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.*
 
 val session_cookie = System.getenv("SESSION_COOKIE")
 val cody_endpoint = System.getenv("SRC_ENDPOINT")
 val cody_accesstoken = System.getenv("SRC_ACCESS_TOKEN")
-val path = "src"
+val path = ""
+val cody_path = "/Users/ludovic/.nvm/versions/node/v21.4.0/bin/cody"
+val node_path = "/usr/local/bin/node"
+const val BIN_BASH = "/bin/bash"
 
 // Function to fetch the puzzle and input for the current day
 suspend fun fetchPuzzleAndInput(day: Int, star: Int = 1) {
@@ -42,10 +45,10 @@ suspend fun fetchPuzzleAndInput(day: Int, star: Int = 1) {
         val sample = article?.select("pre > code")?.first()?.text()?.trim() ?: "Sample content not found."
         val title = puzzleContent.substringBefore(" --- ", "").substringAfter("--- ", "")
 
-        val content = puzzleContent.substringBefore(" --- ", "")
+        val content = puzzleContent.substringAfter(" --- ", "")
         // Save the puzzle content to a file
-        File("$path/Day${dayPad}_star${star}.txt").writeText(content)
-        File("$path/Day${dayPad}_star${star}_sample.txt").writeText(sample)
+        File("${path}Day${dayPad}_star${star}.txt").writeText(content)
+        File("${path}Day${dayPad}_star${star}_sample.txt").writeText(sample)
 
         val kotlinCode = """
 /*
@@ -73,7 +76,7 @@ fun main() {
     Day$dayPad().main()
 }
 """
-        File("$path/Day${dayPad}.kt").writeText(kotlinCode)
+        File("${path}Day${dayPad}.kt").writeText(kotlinCode)
 
         // Fetch the puzzle input
         val inputData = client.get(inputUrl) {
@@ -83,12 +86,18 @@ fun main() {
         }
 
         // Save the input data to a file
-        File("$path/Day${dayPad}_input.txt").writeText(inputData.bodyAsText().trim())
+        File("${path}Day${dayPad}_input.txt").writeText(inputData.bodyAsText().trim())
         println("Puzzle and input for day $day fetched and saved successfully.")
 
         // request Cody star 1
+        //execute("ls .")
+        //execute("where cody")
+        //execute("node -v")
         authCody()
-        runCody(content)
+        val answer = runCody(content)
+
+        File("${path}Day${dayPad}_star${star}_answer.txt").writeText(answer)
+
         // execute kotlin program
         val result1 = runProgram(dayPad)
         val total = result1.substringBefore(":", "").trim()
@@ -152,15 +161,18 @@ fun listContextFiles(path: String="."): String {
     val currentDir = File(path)
     return currentDir.walkTopDown()
         .filter { it.isFile }
-        .filter { !it.name.endsWith(".txt") }
+//        .filter { !it.name.endsWith(".txt") }
+        .filter { it.name.endsWith(".kt") && it.path.contains("src/Day") }
         .map { it.relativeTo(currentDir).path }
         .joinToString(",")
 }
 
 fun authCody(): Boolean {
-    val command = mutableListOf("cody", "auth", "login")
+    val command = mutableListOf("sh", "-c", "cody auth login")
+//    val command = mutableListOf("sh", "-c", "cody auth whoami")
     val r =  execute(command)
-    val auth = r.contains("Authenticated as ")
+//    val auth = r.contains("Authenticated as ")
+    val auth = r.contains("You are already logged in as ")
     if (!auth)
         throw Exception("Cody auth failed")
     return auth
@@ -172,22 +184,41 @@ cody chat --context-file src/Day01.kt,src/Day02.kt,... -m 'Are there code smells
 */
 fun runCody(prompt: String): String {
     val fileList = listContextFiles()
-    val command = mutableListOf("cody", "chat", "--context-file", fileList, "-m", prompt)
-    return execute(command)
+    val cleanPrompt = prompt.replace("'", " ")
+        .replace("\r", " ")
+        .replace("\n", " ")
+//    val command = mutableListOf("sh", "-c", "cody chat --context-file $fileList -m `$cleanPrompt`")
+    val command = mutableListOf("sh", "-c", "cody chat --context-file $fileList -m '$cleanPrompt'")
+//    val command = mutableListOf("sh", "-sc",  "cody chat --context-file $fileList --stdin", cleanPrompt)
+//    val command = mutableListOf("sh", "-c", "echo -e '$cleanPrompt' | cody chat --context-file $fileList --stdin")
+    val r = execute(command)
+    return r
 }
 fun execute(command: String): String {
     return execute(command.split(' '))
 }
-fun execute(command: List<String>): String {
-    println("> $command")
-    val process = ProcessBuilder(command)
+fun execute(commands: List<String>, stdin: String? = null): String {
+    println("> ${commands.joinToString(" ")}")
+    val pb = ProcessBuilder(commands)
+//    val f = File(path)
+//    println("cwd> ${f.absolutePath}")
+//    pb.directory(File(f.absolutePath));
+    pb.inheritIO();
+    val p = pb
+        .redirectErrorStream(true)
         .redirectOutput(ProcessBuilder.Redirect.PIPE)
         .start()
-        
-    val output = process.inputStream.bufferedReader().readText()
-    process.waitFor()
+    if (stdin != null) {
+        p.outputWriter().use {
+            it.write(stdin)
+            it.flush()
+        }
+    }
+    val output = p.inputStream.bufferedReader().readText()
+    println("...waiting...")
+    p.waitFor()
     
-    println("Command output:")
+    println("-- Command output:")
     println(output)
     return output
 }
@@ -199,9 +230,9 @@ fun isNumeric(toCheck: String): Boolean {
     return toCheck.toDoubleOrNull() != null
 }
 fun main(args: Array<String>) {
-    println("Starting Advent of Code puzzle fetcher...")
+    println("Starting Advent of Code puzzle solver...")
 
-    val arg = args.contentToString();
+    val arg = args.joinToString(" ").trim();
     if (arg.isBlank()){
         runToday()
     }else if ("--daemon".equals(arg)){
