@@ -174,11 +174,15 @@ fun runProgram(className: String){
     // Class.forName(className).newInstance()
 }
 
-fun main() {
+fun main(args: Array<String>) {
     println("Starting Advent of Code puzzle fetcher...")
-    //scheduleDailyTask()
-    runToday()
 
-    
+    val arg = args.contentToString();
+    if (arg.isBlank()){
+        scheduleDailyTask()
+    }else{
+        runToday()
+    }
+
 }
 
