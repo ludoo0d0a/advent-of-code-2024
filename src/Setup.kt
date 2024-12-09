@@ -17,12 +17,13 @@ val cody_accesstoken = System.getenv("SRC_ACCESS_TOKEN")
 val path = "src"
 
 // Function to fetch the puzzle and input for the current day
-suspend fun fetchPuzzleAndInput(day: Int) {
+suspend fun fetchPuzzleAndInput(day: Int, star: Int = 1) {
     val client = HttpClient(CIO)
 
     // Define URLs
     val puzzleUrl = "https://adventofcode.com/2024/day/$day"
     val inputUrl = "https://adventofcode.com/2024/day/$day/input"
+    val postUrl = "https://adventofcode.com/2024/day/$day/answer/"
     val dayPad = day.toString().padStart(2, '0')
 
     try {
@@ -36,14 +37,15 @@ suspend fun fetchPuzzleAndInput(day: Int) {
         // Parse the HTML with Jsoup
         val text = html.bodyAsText()
         val document = Jsoup.parse(text)
-        val puzzleContent = document.select("main > article").first()?.text()?.trim() ?: "Puzzle content not found."
-        val sample = document.select("main > article > pre > code").first()?.text()?.trim() ?: "Sample content not found."
+        val article = document.select("main > article").get(star)
+        val puzzleContent = article?.text()?.trim() ?: "Puzzle content not found."
+        val sample = article?.select("pre > code").first()?.text()?.trim() ?: "Sample content not found."
         val title = puzzleContent.substringBefore(" --- ", "").substringAfter("--- ", "")
 
         val content1 = puzzleContent.substringBefore(" --- ", "")
         // Save the puzzle content to a file
-        File("$path/Day${dayPad}.txt").writeText(content1)
-        File("$path/Day${dayPad}_sample.txt").writeText(sample)
+        File("$path/Day${dayPad}_star${star}.txt").writeText(content1)
+        File("$path/Day${dayPad}_star${star}_sample.txt").writeText(sample)
 
         val kotlinCode = """
 /*
@@ -54,8 +56,8 @@ class Day$dayPad {
     val DEBUG=true;
 
     fun main() {
-        val input = readInput("Day${dayPad}_sample")
-        //val input = readInput("Day${dayPad}_input")
+        val input = readInput("Day${dayPad}_star${star}_sample")
+        //val input = readInput("Day${dayPad}_star${star}_input")
 
 
     }
@@ -91,9 +93,16 @@ fun main() {
         val result1 = runProgram1("Day$dayPad")
         val total = result1.substringBefore(":", "").trim()
         //submit result1
-        client.post(inputUrl) {
-        
-        
+        val submissionResult = client.post(postUrl+star) {
+            headers {
+                append("cookie", "session=$session_cookie")
+            }
+            body { "total=$total" }
+        }
+        //chekc submission Result
+        val ok = submissionResult.contains("You're right")
+        println("Submission day:$dayPad, star:$star total:$total = $submissionResult >> OK=$ok" )
+
     } catch (e: IOException) {
         println("Error fetching data: ${e.message}")
     } finally {
