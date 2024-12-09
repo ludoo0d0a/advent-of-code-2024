@@ -86,6 +86,8 @@ fun main() {
 
         authCody()
         runCody(content1)
+
+        runProgram1("Day$dayPad")
         
     } catch (e: IOException) {
         println("Error fetching data: ${e.message}")
@@ -151,6 +153,9 @@ fun runCody(prompt: String): String {
     val command = mutableListOf("cody", "chat", "--context-file", fileList, "-m", prompt)
     return execute(command)
 }
+fun execute(command: String): String {
+    return execute(command.split(' '))
+}
 fun execute(command: List<String>): String {
     println("> $command")
     val process = ProcessBuilder(command)
@@ -164,10 +169,16 @@ fun execute(command: List<String>): String {
     println(output)
     return output
 }
+fun runProgram(className: String){
+    execute("gradle run")
+    // Class.forName(className).newInstance()
+}
 
 fun main() {
     println("Starting Advent of Code puzzle fetcher...")
     //scheduleDailyTask()
     runToday()
+
+    
 }
 
