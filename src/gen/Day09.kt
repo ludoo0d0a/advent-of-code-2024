@@ -93,11 +93,84 @@ class Day09 {
         return calculateChecksum(compactedState)
     }
 
+    fun solve2(input: String): Long {
+        val lengths = parseInput(input)
+        val initialState = createInitialState(lengths)
+
+        if (DEBUG) {
+            dbg("Initial state:")
+            dbg(initialState.blocks.joinToString("") { if (it == -1) "." else it.toString() })
+        }
+
+        val compactedState = compactFilesWholeMove(initialState)
+
+        if (DEBUG) {
+            dbg("\nFinal state:")
+            dbg(compactedState.blocks.joinToString("") { if (it == -1) "." else it.toString() })
+        }
+
+        return calculateChecksum(compactedState)
+    }
+
+    private fun compactFilesWholeMove(state: DiskState): DiskState {
+        val blocks = state.blocks.toMutableList()
+        val fileIds = state.filePositions.keys.sortedDescending()
+
+        for (fileId in fileIds) {
+            val filePositions = state.filePositions[fileId] ?: continue
+            val fileSize = filePositions.size
+
+            // Find leftmost suitable free space
+            var currentPos = 0
+            while (currentPos < blocks.size) {
+                // Skip non-free space
+                if (blocks[currentPos] != -1) {
+                    currentPos++
+                    continue
+                }
+
+                // Check if we have enough contiguous free space
+                val freeSpace = blocks.drop(currentPos).takeWhile { it == -1 }.count()
+                if (freeSpace >= fileSize) {
+                    // Move the whole file if it's to the left of current position
+                    val originalStart = filePositions.first()
+                    if (originalStart > currentPos) {
+                        // Remove file from original position
+                        filePositions.forEach { pos -> blocks[pos] = -1 }
+                        // Place file in new position
+                        repeat(fileSize) { offset ->
+                            blocks[currentPos + offset] = fileId
+                        }
+                    }
+                    break
+                }
+                currentPos++
+            }
+
+            if (DEBUG) {
+                dbg("After moving file $fileId:")
+                dbg(blocks.joinToString("") { if (it == -1) "." else it.toString() })
+            }
+        }
+
+        return DiskState(
+            blocks = blocks,
+            filePositions = blocks.mapIndexed { index, id ->
+                index to id
+            }.filter { it.second != -1 }
+                .groupBy({ it.second }, { it.first })
+        )
+    }
+
+
     fun main() {
         //val input = readInputBody("gen/Day09_sample") // 1928
         val input = readInputBody("gen/Day09_input")
-        val result = solve(input)
-        println("Filesystem checksum: $result")
+        //val result = solve(input)
+        //println("Filesystem checksum: $result")
+
+        val result2 = solve2(input)
+        println("Filesystem checksum2: $result2")
     }
 
     fun dbg(s: String) {
