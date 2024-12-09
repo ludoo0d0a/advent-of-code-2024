@@ -27,4 +27,12 @@ If you're stuck with Kotlin-specific questions or anything related to this templ
 
 
 TODO
-write a script , schedule it every day at 6 PM, to query puzzle of the day from url 'https://adventofcode.com/2024/day/XX' where XX is the current day of the month. Parse html to extract text only of first puzzle located in first article tag, under main tag. create a file aside from the content of url https://adventofcode.com/2024/day/XX/input where XX is the current day of the month. The script should query Cody to solve problem in Kotlin
+npm install -g @sourcegraph/cody
+
+export SRC_ENDPOINT=ENDPOINT
+export SRC_ACCESS_TOKEN=ACCESS_TOKEN
+cody auth login
+
+cody auth whoami
+
+cody chat --context-file src/Day01.kt,src/Day02.kt,... -m 'Are there code smells in this file?'
