@@ -55,3 +55,8 @@ $MVN_HOME\org\jetbrains\kotlin\kotlin-stdlib-jdk8\2.0.21\kotlin-stdlib-jdk8-2.0.
 $MVN_HOME\org\jetbrains\kotlin\kotlin-stdlib-jdk7\2.0.21\kotlin-stdlib-jdk7-2.0.21.jar 
 Day01Kt
 ```
+
+or
+```
+gradle run
+```
