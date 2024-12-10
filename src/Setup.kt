@@ -20,7 +20,7 @@ val node_path = "/usr/local/bin/node"
 const val BIN_BASH = "/bin/bash"
 
 // Function to fetch the puzzle and input for the current day
-suspend fun fetchPuzzleAndInput(day: Int, star: Int = 1) {
+suspend fun fetchPuzzleAndInput(day: Int) {
     val client = HttpClient(CIO)
 
     // Define URLs
@@ -40,7 +40,10 @@ suspend fun fetchPuzzleAndInput(day: Int, star: Int = 1) {
         // Parse the HTML with Jsoup
         val text = html.bodyAsText()
         val document = Jsoup.parse(text)
-        val article = document.select("main > article").get(star)
+        val articles = document.select("main > article")
+        val articlesCount = articles.size
+        val star = articlesCount
+        val article = articles.get(star-1)
         val puzzleContent = article?.text()?.trim() ?: "Puzzle content not found."
         val sample = article?.select("pre > code")?.first()?.text()?.trim() ?: "Sample content not found."
         val title = puzzleContent.substringBefore(" --- ", "").substringAfter("--- ", "")
@@ -143,6 +146,7 @@ fun scheduleDailyTask() {
     }
 
     val delayMillis = java.time.Duration.between(now, nextRun).toMillis()
+    println("Next run scheduled for: $nextRun")
     scheduler.scheduleAtFixedRate(task, delayMillis, 24 * 60 * 60 * 1000)  // Repeat daily
 }
 
@@ -236,10 +240,13 @@ fun main(args: Array<String>) {
 
     val arg = args.joinToString(" ").trim();
     if (arg.isBlank()){
+        println("Running today's puzzle")
         runToday()
     }else if ("--daemon".equals(arg)){
+        println("Starting daemon")
         scheduleDailyTask()
     }else if (args.size>1 && "--day".equals(args[0]) && isNumeric(args[1]) ){
+        println("Running day ${args[1]}")
         runDay(args[1].toInt())
     }
 }
