@@ -2,6 +2,7 @@ import java.math.BigInteger
 import java.security.MessageDigest
 import kotlin.io.path.Path
 import kotlin.io.path.readText
+import java.io.File
 
 fun readInputBody(name: String) = Path("src/$name.txt").readText().trim().replace("\r","")
 
