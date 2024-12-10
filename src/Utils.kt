@@ -35,13 +35,13 @@ fun printLines(matrix: List<String>) {
 
 fun getPathSrc(): String {
     val f = File("")
-    val path = f.absolutePath
+    var path = f.absolutePath
     if (!path.endsWith("src")){
         path+="/src"
     }
     val dirSrc = File(path)
-    if (!dirSrc.exist())
-        throw new Exception("Dir $path don't exist")
+    if (!dirSrc.exists())
+        throw Exception("Dir $path don't exist")
     return path
 }
 
