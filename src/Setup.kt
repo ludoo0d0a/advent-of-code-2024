@@ -14,7 +14,7 @@ import java.util.*
 val session_cookie = System.getenv("SESSION_COOKIE")
 val cody_endpoint = System.getenv("SRC_ENDPOINT")
 val cody_accesstoken = System.getenv("SRC_ACCESS_TOKEN")
-val path = ""
+val path = getPathSrc();
 val cody_path = "/Users/ludovic/.nvm/versions/node/v21.4.0/bin/cody"
 val node_path = "/usr/local/bin/node"
 const val BIN_BASH = "/bin/bash"
