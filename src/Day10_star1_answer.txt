@@ -1,0 +1,83 @@
+- Logging in
+(node:61061) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+To solve this problem, we need to implement an algorithm that finds all trailheads (positions with height 0) and calculates their scores based on the number of reachable 9-height positions. Here's a high-level approach to solve this problem:
+
+1. Parse the input to create a 2D grid representing the topographic map.
+2. Find all trailheads (positions with height 0).
+3. For each trailhead, perform a breadth-first search (BFS) to find all reachable 9-height positions.
+4. Calculate the score for each trailhead and sum them up.
+
+Here's a Kotlin implementation that solves this problem:
+
+```kotlin:src/Day10.kt
+import java.io.File
+
+fun main() {
+    val input = File("input.txt").readLines()
+    val result = sumTrailheadScores(input)
+    println("Sum of trailhead scores: $result")
+}
+
+fun sumTrailheadScores(input: List<String>): Int {
+    val grid = input.map { it.map { c -> c.digitToInt() } }
+    val rows = grid.size
+    val cols = grid[0].size
+
+    fun isValid(r: Int, c: Int) = r in 0 until rows && c in 0 until cols
+
+    val directions = listOf(-1 to 0, 1 to 0, 0 to -1, 0 to 1)
+
+    fun bfs(startR: Int, startC: Int): Int {
+        val visited = Array(rows) { BooleanArray(cols) }
+        val queue = ArrayDeque<Triple<Int, Int, Int>>()
+        queue.add(Triple(startR, startC, 0))
+        visited[startR][startC] = true
+        var score = 0
+
+        while (queue.isNotEmpty()) {
+            val (r, c, height) = queue.removeFirst()
+
+            if (grid[r][c] == 9) {
+                score++
+            }
+
+            for ((dr, dc) in directions) {
+                val newR = r + dr
+                val newC = c + dc
+                if (isValid(newR, newC) && !visited[newR][newC] && grid[newR][newC] == height + 1) {
+                    queue.add(Triple(newR, newC, height + 1))
+                    visited[newR][newC] = true
+                }
+            }
+        }
+
+        return score
+    }
+
+    var totalScore = 0
+    for (r in 0 until rows) {
+        for (c in 0 until cols) {
+            if (grid[r][c] == 0) {
+                totalScore += bfs(r, c)
+            }
+        }
+    }
+
+    return totalScore
+}
+```
+
+This implementation does the following:
+
+1. We parse the input into a 2D grid of integers.
+2. We define a BFS function that starts from a given trailhead and explores all reachable positions, counting the number of 9-height positions encountered.
+3. We iterate through the grid to find all trailheads (positions with height 0).
+4. For each trailhead, we perform a BFS and add its score to the total score.
+5. Finally, we return the sum of all trailhead scores.
+
+To use this solution, save the code in a file named `Day10.kt` in the `src` directory, and make sure your input is in a file named `input.txt` in the project root. Then run the `main` function to get the result.
+
+This solution efficiently handles the problem by using BFS to explore only valid hiking trails from each trailhead, ensuring that we only count reachable 9-height positions and follow the rules of increasing height by exactly 1 at each step.
+
+✔ Claude 3.5 Sonnet (31 tokens/second)
