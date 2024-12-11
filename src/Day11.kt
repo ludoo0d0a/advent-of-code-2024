@@ -7,27 +7,38 @@ class Day11 {
         println("Part 2 (75 iterations): ${part2(initialStones)}")
     }
 
-    fun part1(initialStones: List<Long>): Int {
-        var stones = initialStones
+    fun part1(initialStones: List<Long>): Long {
+        var stoneCounts = initialStones.groupingBy { it }.eachCount().mapValues { it.value.toLong() }
+
         repeat(25) {
-            stones = stones.flatMap { transformStone(it) }
+            stoneCounts = processStoneMap(stoneCounts)
         }
-        return stones.size
+        return stoneCounts.values.sum()
     }
 
-    fun part2(initialStones: List<Long>): Int {
-        var stones = initialStones
-        // Process in chunks to avoid excessive memory usage
-        repeat(75) { iteration ->
-            stones = stones.chunked(10000)
-                .flatMap { chunk -> chunk.flatMap { transformStone(it) } }
+    fun part2(initialStones: List<Long>): Long {
+        var stoneCounts = initialStones.groupingBy { it }.eachCount().mapValues { it.value.toLong() }
 
-            // Optional progress tracking
+        repeat(75) { iteration ->
+            stoneCounts = processStoneMap(stoneCounts)
+
             if ((iteration + 1) % 10 == 0) {
-                println("Completed iteration ${iteration + 1}, current stones: ${stones.size}")
+                println("Completed iteration ${iteration + 1}, current stones: ${stoneCounts.values.sum()}")
             }
         }
-        return stones.size
+        return stoneCounts.values.sum()
+    }
+
+    private fun processStoneMap(stoneCounts: Map<Long, Long>): Map<Long, Long> {
+        val newCounts = mutableMapOf<Long, Long>()
+
+        stoneCounts.forEach { (stone, count) ->
+            val transformed = transformStone(stone)
+            transformed.forEach { newStone ->
+                newCounts[newStone] = newCounts.getOrDefault(newStone, 0L) + count
+            }
+        }
+        return newCounts
     }
 
     fun transformStone(stone: Long): List<Long> {
