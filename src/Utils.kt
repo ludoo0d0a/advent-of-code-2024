@@ -44,4 +44,18 @@ fun getPathSrc(): String {
     return "$p${File.separator}"
 }
 
+fun parseArgs(args: Array<String>): Map<String, String> {
+    return args.asSequence()
+        .withIndex()
+        .filter { it.value.startsWith("--") }
+        .map { indexed ->
+            val key = indexed.value.substring(2)
+            val nextIndex = indexed.index + 1
+            val value = if (nextIndex < args.size && !args[nextIndex].startsWith("--")) {
+                args[nextIndex]
+            } else ""
+            key to value
+        }
+        .toMap()
+}
 

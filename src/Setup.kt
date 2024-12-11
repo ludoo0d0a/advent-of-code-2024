@@ -24,7 +24,7 @@ class Setup {
     var star: Int = 1
 
     // Function to fetch the puzzle and input for the current day
-    suspend fun fetchPuzzleAndInput(day: Int) {
+    suspend fun fetchPuzzleAndInput(day: Int, requestedStar: Int) {
         // Define URLs
         val puzzleUrl = "https://adventofcode.com/2024/day/$day"
         val inputUrl = "https://adventofcode.com/2024/day/$day/input"
@@ -37,7 +37,7 @@ class Setup {
             val document = Jsoup.parse(html)
             val articles = document.select("main > article")
             val articlesCount = articles.size
-            star = articlesCount
+            star = requestedStar.or(articlesCount)
             val article = articles.get(star - 1)
             val puzzleContent = article?.text()?.trim() ?: "Puzzle content not found."
             val sample = article?.select("pre > code")?.first()?.text()?.trim() ?: "Sample content not found."
@@ -151,17 +151,17 @@ $code
         scheduler.scheduleAtFixedRate(task, delayMillis, 24 * 60 * 60 * 1000)  // Repeat daily
     }
 
-    fun runDay(day: Int) {
+    fun runDay(day: Int, star: Int) {
         println("Running task for Day $day")
 
         runBlocking {
-            fetchPuzzleAndInput(day)
+            fetchPuzzleAndInput(day, star)
         }
     }
 
-    fun runToday() {
+    fun runToday(star: Int=1) {
         val currentDay = LocalDate.now().dayOfMonth
-        runDay(currentDay)
+        runDay(currentDay, star)
     }
 
     fun listContextFiles(path: String = "."): String {
@@ -257,16 +257,18 @@ fun main(args: Array<String>) {
     println("Starting Advent of Code puzzle solver...")
 
     val setup = Setup();
-    val arg = args.joinToString(" ").trim();
-    if (arg.isBlank()) {
+    val arguments = parseArgs(args)
+    val day = arguments.getOrDefault("day", "0").toInt()
+    val star = arguments.getOrDefault("star", "1").toInt()
+    if (arguments.isEmpty()) {
         println("Running today's puzzle")
-        setup.runToday()
-    } else if ("--daemon".equals(arg)) {
+        setup.runToday(star)
+    } else if (arguments.containsKey("daemon")) {
         println("Starting daemon")
         setup.scheduleDailyTask()
-    } else if (args.size > 1 && "--day".equals(args[0]) && setup.isNumeric(args[1])) {
-        println("Running day ${args[1]}")
-        setup.runDay(args[1].toInt())
+    } else if (arguments.containsKey("day")) {
+        println("Running day ${day} star ${star}")
+        setup.runDay(day, star)
     }
 }
 
