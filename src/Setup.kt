@@ -65,11 +65,11 @@ class Setup {
             writecodeFile(title, answer)
 
 //        // execute kotlin program
-//        val result1 = runProgram(dayPad)
+//        val result1 = buildRunProgram(dayPad)
 //        val total = result1.substringBefore(":", "").trim()
 
-//        //submit result1
-//            val submissionResult = httpPost(client, postUrl + star, "total=$total")
+//        //submit result
+//        val submissionResult = httpPost(client, postUrl + star, "total=$total")
 //        //check submission Result
 //        val ok = submissionResult.contains("You're right")
 //        println("Submission day:$dayPad, star:$star total:$total = $submissionResult >> OK=$ok" )
@@ -243,32 +243,56 @@ $code
         return output
     }
 
+    fun buildRunProgram(dayPad: String): String {
+        return execute("gradle run --args='--run $dayPad'")
+    }
+
     fun runProgram(dayPad: String): String {
-        return execute("gradle run --args=$dayPad")
-        // Class.forName(className).newInstance()
+        val instance = Class.forName("Day$dayPad").getDeclaredConstructor().newInstance()
+        val method = instance.javaClass.getMethod("main")
+        val result = method.invoke(instance)
+        return result.toString()
     }
 
     fun isNumeric(toCheck: String): Boolean {
         return toCheck.toDoubleOrNull() != null
     }
+
+    companion object {
+        fun main(args: Array<String>) {
+            println("Starting Advent of Code puzzle solver...")
+
+            val setup = Setup();
+            val arguments = parseArgs(args)
+            println("Arguments: $arguments")
+            val day = arguments.getOrDefault("day", "0").toInt()
+            val star = arguments.getOrDefault("star", "1").toInt()
+            if (arguments.isEmpty()) {
+                println(">>Running today's puzzle")
+                //setup.runToday(star)
+            } else if (arguments.containsKey("daemon")) {
+                println(">>Starting daemon")
+                setup.scheduleDailyTask()
+            } else if (arguments.containsKey("day")) {
+                println(">>Running day ${day} star ${star}")
+                setup.runDay(day, star)
+            }else if (arguments.containsKey("run")) {
+                val dayPad = arguments.getOrDefault("run", "00")
+                println(">>Run program ${dayPad}")
+                val response = setup.runProgram(dayPad)
+                println(">>Program returned: ${response}")
+            }else if (arguments.containsKey("build")) {
+                val dayPad = arguments.getOrDefault("build", "00")
+                println(">>Build & run program ${dayPad}")
+                val response = setup.buildRunProgram(dayPad)
+                println(">>Program returned: ${response}")
+            }
+
+        }
+    }
 }
 
 fun main(args: Array<String>) {
-    println("Starting Advent of Code puzzle solver...")
-
-    val setup = Setup();
-    val arguments = parseArgs(args)
-    val day = arguments.getOrDefault("day", "0").toInt()
-    val star = arguments.getOrDefault("star", "1").toInt()
-    if (arguments.isEmpty()) {
-        println("Running today's puzzle")
-        setup.runToday(star)
-    } else if (arguments.containsKey("daemon")) {
-        println("Starting daemon")
-        setup.scheduleDailyTask()
-    } else if (arguments.containsKey("day")) {
-        println("Running day ${day} star ${star}")
-        setup.runDay(day, star)
-    }
+    Setup.main(args)
 }
 

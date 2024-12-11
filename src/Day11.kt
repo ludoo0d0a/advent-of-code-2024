@@ -1,10 +1,14 @@
 class Day11 {
-    fun main() {
+    fun main(): String {
         val input = readLines("Day11_input")
         val initialStones = input.first().split(" ").map { it.toLong() }
 
-        println("Part 1 (25 iterations): ${part1(initialStones)}")
-        println("Part 2 (75 iterations): ${part2(initialStones)}")
+        val answer1 = part1(initialStones)
+        println("Part 1 (25 iterations): ${answer1}")
+
+        val answer2 = part2(initialStones)
+        println("Part 2 (75 iterations): ${answer2}")
+        return "$answer1,$answer2"
     }
 
     fun part1(initialStones: List<Long>): Long {

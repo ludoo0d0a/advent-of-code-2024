@@ -4,7 +4,7 @@ plugins {
 }
 
 application {
-    mainClass = "Setup"
+    mainClass = "SetupKt"
 }
 
 sourceSets {
@@ -26,6 +26,7 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation:$ktor_version")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
 
+    implementation(kotlin("reflect"))
     implementation("org.jsoup:jsoup:1.15.3")          // HTML parsing
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1") // For async tasks
     implementation("com.zaxxer:HikariCP:5.0.1")       // For scheduling task

@@ -58,7 +58,7 @@ Day01
 
 or
 ```
-gradle run --args='Day01'
+gradle run --args="--day 11"
 ```
 
 
