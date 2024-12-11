@@ -1,0 +1,63 @@
+- Logging in
+(node:72882) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+To solve this problem, we need to implement the given rules for stone transformation and apply them 25 times to the initial arrangement of stones. Here's a Kotlin implementation that solves this problem:
+
+```kotlin:src/Day11.kt
+fun main() {
+    val input = readInput("Day11")
+    val initialStones = input.first().split(" ").map { it.toLong() }
+    
+    println(part1(initialStones))
+}
+
+fun part1(initialStones: List<Long>): Int {
+    var stones = initialStones
+    repeat(25) {
+        stones = stones.flatMap { transformStone(it) }
+    }
+    return stones.size
+}
+
+fun transformStone(stone: Long): List<Long> {
+    return when {
+        stone == 0L -> listOf(1)
+        stone.toString().length % 2 == 0 -> splitStone(stone)
+        else -> listOf(stone * 2024)
+    }
+}
+
+fun splitStone(stone: Long): List<Long> {
+    val digits = stone.toString()
+    val mid = digits.length / 2
+    val left = digits.substring(0, mid).toLong()
+    val right = digits.substring(mid).toLong()
+    return listOf(left, right)
+}
+
+fun readInput(name: String) = File("src", "$name.txt").readLines()
+```
+
+This solution does the following:
+
+1. We read the input from a file named "Day11.txt" in the src directory.
+2. We parse the initial arrangement of stones into a list of Long values.
+3. In the `part1` function, we apply the transformation rules 25 times.
+4. The `transformStone` function implements the three rules for stone transformation:
+   - If the stone is 0, it becomes 1.
+   - If the stone has an even number of digits, it splits into two stones.
+   - Otherwise, the stone is multiplied by 2024.
+5. The `splitStone` function handles the splitting of stones with an even number of digits.
+6. After 25 transformations, we return the number of stones.
+
+To use this solution:
+
+1. Create a file named `Day11.txt` in the `src` directory.
+2. Put your input (the initial arrangement of stones) in this file as a single line of space-separated numbers.
+3. Run the `main` function.
+
+The output will be the number of stones after 25 blinks.
+
+This solution efficiently handles the transformation rules and should work for large inputs as well. The use of `Long` instead of `Int` ensures that we can handle large numbers that might result from multiplying by 2024 multiple times.
+
+✔ Claude 3.5 Sonnet (46 tokens/second)

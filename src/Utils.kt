@@ -42,7 +42,8 @@ fun getPathSrc(): String {
     val dirSrc = File(path)
     if (!dirSrc.exists())
         throw Exception("Dir $path don't exist")
-    return path
+    println("Current dir: $dirSrc")
+    return path+"/"
 }
 
 
