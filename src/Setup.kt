@@ -1,6 +1,7 @@
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
@@ -65,15 +66,21 @@ class Setup {
 
             writecodeFile(title, answer)
 
-//        // execute kotlin program
-//        val result1 = buildRunProgram(dayPad)
-//        val total = result1.substringBefore(":", "").trim()
+            // execute kotlin program
+            val result = buildRunProgram(dayPad)
+            val totals = result.split(",")
+            println("Result for totals: $totals")
 
-//        //submit result
-//        val submissionResult = httpPost(client, postUrl + star, "total=$total")
-//        //check submission Result
-//        val ok = submissionResult.contains("You're right")
-//        println("Submission day:$dayPad, star:$star total:$total = $submissionResult >> OK=$ok" )
+            val total = totals.getOrNull(star - 1) ?:
+                    throw Exception("Total not found for star $star in totals $totals")
+
+            println("Will submit answer for day:$dayPad, star:$star = $total")
+            //submit result
+            val submissionResult = httpForm( postUrl + star, total)
+            println("Submission result: $submissionResult")
+            //check submission Result
+            val ok = submissionResult.contains("You're right")
+            println("Submission day:$dayPad, star:$star total:$total = $submissionResult >> OK=$ok" )
 
         } catch (e: IOException) {
             println("Error fetching data: ${e.message}")
@@ -106,8 +113,19 @@ class Setup {
         }
         return inputData.bodyAsText().trim()
     }
+    private suspend fun httpForm(
+        postUrl: String,
+        answer: String
+    ): String {
+        val inputData = client.submitForm{
+            url(postUrl)
+            parameter("answer", answer)
+            header("cookie", "session=$session_cookie")
+        }
+        return inputData.bodyAsText().trim()
+    }
 
-    private fun writeFile(filename: String, content: String ) {
+    private fun writeFile(filename: String, content: String) {
         File("${path}${filename}").writeText(content)
     }
 
@@ -160,7 +178,7 @@ $code
         }
     }
 
-    fun runToday(star: Int=1) {
+    fun runToday(star: Int = 1) {
         val currentDay = LocalDate.now().dayOfMonth
         runDay(currentDay, star)
     }
@@ -214,6 +232,7 @@ $code
         val commands = mutableListOf("sh", "-c", command)
         return execute(commands)
     }
+
     fun execute(command: String): String {
         return execute(command.split(' '))
     }
@@ -248,7 +267,7 @@ $code
 
     fun buildRunProgram(dayPad: String): String {
         val content = executeSh("gradle run --args='--run $dayPad'")
-        val response = content.substringAfter(SEPARATOR).substringBefore(SEPARATOR)
+        val response = content.substringAfter(SEPARATOR).substringBefore(SEPARATOR).trim()
         return response
     }
 
@@ -283,12 +302,12 @@ $code
             } else if (arguments.containsKey("day")) {
                 println(">>Running day ${day} star ${star}")
                 setup.runDay(day, star)
-            }else if (arguments.containsKey("run")) {
+            } else if (arguments.containsKey("run")) {
                 val dayPad = arguments.getOrDefault("run", "00")
                 println(">>Run program ${dayPad}")
                 val response = setup.runProgram(dayPad)
                 println(response)
-            }else if (arguments.containsKey("build")) {
+            } else if (arguments.containsKey("build")) {
                 val dayPad = arguments.getOrDefault("build", "00")
                 println(">>Build & run program ${dayPad}")
                 val response = setup.buildRunProgram(dayPad)
