@@ -38,7 +38,7 @@ class Day07 {
     val DEBUG=false;
 
     fun main() {
-        val input = readInputBody("Day07_test1")
+        val input = readFileContent("Day07_test1")
 
         val result = findValidEquations(input)
         println("Total calibration result: $result")

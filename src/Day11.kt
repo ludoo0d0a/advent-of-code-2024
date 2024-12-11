@@ -1,22 +1,31 @@
-import java.io.File
-
-/*
-Day 11: Plutonian Pebbles
-*/
 class Day11 {
-
-
     fun main() {
-        val input = readInput("Day11_input")
+        val input = readLines("Day11_input")
         val initialStones = input.first().split(" ").map { it.toLong() }
 
-        println(part1(initialStones))
+        println("Part 1 (25 iterations): ${part1(initialStones)}")
+        println("Part 2 (75 iterations): ${part2(initialStones)}")
     }
 
     fun part1(initialStones: List<Long>): Int {
         var stones = initialStones
         repeat(25) {
             stones = stones.flatMap { transformStone(it) }
+        }
+        return stones.size
+    }
+
+    fun part2(initialStones: List<Long>): Int {
+        var stones = initialStones
+        // Process in chunks to avoid excessive memory usage
+        repeat(75) { iteration ->
+            stones = stones.chunked(10000)
+                .flatMap { chunk -> chunk.flatMap { transformStone(it) } }
+
+            // Optional progress tracking
+            if ((iteration + 1) % 10 == 0) {
+                println("Completed iteration ${iteration + 1}, current stones: ${stones.size}")
+            }
         }
         return stones.size
     }
@@ -36,7 +45,6 @@ class Day11 {
         val right = digits.substring(mid).toLong()
         return listOf(left, right)
     }
-
 }
 
 fun main() {

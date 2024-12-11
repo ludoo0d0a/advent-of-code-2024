@@ -219,7 +219,7 @@ class Day09 {
 //        val result2 = solve2(sample) //2858
 //        println("Filesystem checksum sample2: $result2")
 
-        val input = readInputBody("Day09_input")
+        val input = readFileContent("Day09_input")
         val result = solve2(input)
         println("Filesystem checksum 2: $result")
 

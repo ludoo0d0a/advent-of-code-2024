@@ -29,7 +29,7 @@ class Day06 {
     val DEBUG=false;
 
     fun main() {
-        val input = readInputBody("Day06_test1")
+        val input = readFileContent("Day06_test1")
 
         val result1 = countVisitedPositions(input)
         println("Distinct positions visited: $result1")

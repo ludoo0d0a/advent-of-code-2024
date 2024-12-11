@@ -4,14 +4,11 @@ import kotlin.io.path.Path
 import kotlin.io.path.readText
 import java.io.File
 
-fun readInputBody(name: String) = Path("src/$name.txt").readText().trim().replace("\r","")
+fun readFileContent(name: String) = Path("src/$name.txt").readText().trim().replace("\r","")
 
-/**
- * Reads lines from the given input txt file.
- */
-fun readInput(name: String) = Path("src/$name.txt").readText().trim().lines()
+fun readLines(name: String) = readFileContent(name).lines()
 
-fun readInputMatrix(name: String) = Path("src/$name.txt").readText().trim().lines().map { it.toCharArray().toList() }
+fun readMatrix(name: String) = readLines(name).map { it.toCharArray().toList() }
 
 /**
  * Converts string to md5 hash.
@@ -43,7 +40,8 @@ fun getPathSrc(): String {
     if (!dirSrc.exists())
         throw Exception("Dir $path don't exist")
     println("Current dir: $dirSrc")
-    return path+"/"
+    val p = Path(path)
+    return "$p${File.separator}"
 }
 
 

@@ -2,7 +2,7 @@ import kotlin.math.abs
 
 class Day02 {
     fun main() {
-        val body = readInputBody("Day02_test")
+        val body = readFileContent("Day02_test")
         val total = solve(body)
         println("Number of safe reports with Problem Dampener: $total")
     }

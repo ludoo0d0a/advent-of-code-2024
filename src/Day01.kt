@@ -33,7 +33,7 @@ class Day01 {
         }
     }
     fun main() {
-        val body = readInputBody("Day01_test")
+        val body = readFileContent("Day01_test")
         val total = solve(body)
         println("Total distance: $total")
         val similarity = solve2(body)

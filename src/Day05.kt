@@ -2,20 +2,20 @@ class Day05(){
         
     fun main() {
         test1()
-        val body = readInputBody("Day05_test1")
+        val body = readFileContent("Day05_test1")
         val total = solve2(body)
         println("Part 2 Total: $total")
     }
     
     
     fun test1() {
-        val body = readInputBody("Day05_test1")
+        val body = readFileContent("Day05_test1")
         val total = solve(body) // -> 4637
         println("Total: $total")
     }
     
     fun sample() {
-        val body = readInputBody("Day05_test")
+        val body = readFileContent("Day05_test")
         val total = solve(body) // -> 143
         println("Total: $total")
     }

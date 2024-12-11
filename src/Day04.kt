@@ -8,7 +8,7 @@ class Day04(){
     }
     fun patternFinder() {
         search = "MAS"
-        val lines = readInputMatrix("Day04_test")
+        val lines = readMatrix("Day04_test")
         val n = lines.size
         val m = lines[0].size
         var total=0;
@@ -57,7 +57,7 @@ class Day04(){
     fun wordFinder() {
         search = "XMAS"
         //val lines = readInput("Day04_test") //-> 18
-        val lines = readInput("Day04_test1")
+        val lines = readLines("Day04_test1")
         val lineH = lines.joinToString(" ")
         val totalH = countRev(lineH)
     

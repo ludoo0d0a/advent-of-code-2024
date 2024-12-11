@@ -1,7 +1,7 @@
 class Day03(){
     fun main() {
 
-    val testInputs = readInput("Day03_test")
+    val testInputs = readLines("Day03_test")
     println("File has ${testInputs.size} lines")
 
     val rex = "mul\\((\\d+),(\\d+)\\)".toRegex()
