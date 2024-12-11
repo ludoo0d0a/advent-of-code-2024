@@ -191,6 +191,7 @@ $code
         please write a kotlin class named ${dayPad}, with a main function, using ${dayPad}_input as input file. 
         Print the result to the console using the following format : "Result=(XX)" where XX is the result value.
         Optimize the algorithm to be be efficient and fast so that solution can be found in a reasonable amount of time.
+        Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation.
         """;
     }
 
