@@ -21,6 +21,7 @@ class Setup {
     val node_path = "/usr/local/bin/node"
     val BIN_BASH = "/bin/bash"
     var dayPad: String = ""
+
     var star: Int = 1
 
     // Function to fetch the puzzle and input for the current day
@@ -205,20 +206,20 @@ $code
         val cleanPrompt = prompt.replace("'", " ")
             .replace("\r", " ")
             .replace("\n", " ")
-//    val command = mutableListOf("sh", "-c", "cody chat --context-file $fileList -m `$cleanPrompt`")
-        val command = mutableListOf("sh", "-c", "cody chat --context-file $fileList -m '$cleanPrompt'")
-//    val command = mutableListOf("sh", "-sc",  "cody chat --context-file $fileList --stdin", cleanPrompt)
-//    val command = mutableListOf("sh", "-c", "echo -e '$cleanPrompt' | cody chat --context-file $fileList --stdin")
-        val r = execute(command)
+        val r = executeSh("cody chat --context-file $fileList -m '$cleanPrompt'")
         return r
     }
 
+    fun executeSh(command: String): String {
+        val commands = mutableListOf("sh", "-c", command)
+        return execute(commands)
+    }
     fun execute(command: String): String {
         return execute(command.split(' '))
     }
 
     fun execute(commands: List<String>, stdin: String? = null): String {
-        println("> ${commands.joinToString(" ")}")
+        println("-- execute: ${commands.joinToString(" ")}")
         val pb = ProcessBuilder(commands)
 //    val f = File(path)
 //    println("cwd> ${f.absolutePath}")
@@ -238,20 +239,24 @@ $code
         println("...waiting...")
         p.waitFor()
 
-        println("-- Command output:")
-        println(output)
+        println("-- Command output>")
+        println("$output")
+        println("<Command output")
+
         return output
     }
 
     fun buildRunProgram(dayPad: String): String {
-        return execute("gradle run --args='--run $dayPad'")
+        val content = executeSh("gradle run --args='--run $dayPad'")
+        val response = content.substringAfter(SEPARATOR).substringBefore(SEPARATOR)
+        return response
     }
 
     fun runProgram(dayPad: String): String {
         val instance = Class.forName("Day$dayPad").getDeclaredConstructor().newInstance()
         val method = instance.javaClass.getMethod("main")
         val result = method.invoke(instance)
-        return result.toString()
+        return "${SEPARATOR}${result}${SEPARATOR}"
     }
 
     fun isNumeric(toCheck: String): Boolean {
@@ -259,6 +264,8 @@ $code
     }
 
     companion object {
+        private val SEPARATOR: String = "##"
+
         fun main(args: Array<String>) {
             println("Starting Advent of Code puzzle solver...")
 
@@ -280,12 +287,12 @@ $code
                 val dayPad = arguments.getOrDefault("run", "00")
                 println(">>Run program ${dayPad}")
                 val response = setup.runProgram(dayPad)
-                println(">>Program returned: ${response}")
+                println(response)
             }else if (arguments.containsKey("build")) {
                 val dayPad = arguments.getOrDefault("build", "00")
                 println(">>Build & run program ${dayPad}")
                 val response = setup.buildRunProgram(dayPad)
-                println(">>Program returned: ${response}")
+                println(">>Build & run program returned: ${response}")
             }
 
         }
