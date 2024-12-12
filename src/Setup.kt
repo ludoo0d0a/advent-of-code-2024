@@ -148,14 +148,6 @@ class Setup {
                 append("host", "adventofcode.com")
             }
             setBody("level=$star&answer=$answer")
-//            setBody(
-//                FormDataContent(
-//                    Parameters.build {
-//                        append("level", "$star")
-//                        append("answer", answer)
-//                    }
-//                )
-//            )
         }
         println("HTTP form submit status: $response.status.value");
         println("HTTP form submit headers: ${response.headers}");
@@ -185,6 +177,8 @@ $title
 
 $comments
 */
+import java.util.*
+
 $code
 """
         writeFile("Day${dayPad}.kt", kotlinCode)
@@ -257,14 +251,26 @@ $code
     }
 
     fun getPrompt(content: String): String {
+        val prompt2 = if (star==2){
+            """
+- the result for the sample file 'Day${dayPad}_star2_sample', and try to assert using provided value
+- the result named 'result2' for the input file 'Day${dayPad}_input'
+            """
+        }else ""
+
         return """
-        ${content}
-        please write a kotlin class named ${dayPad}, with a main function, to solve this problem.
-        if a previous solution exists, make a part2 into class and keep part1 into this class, else create a part1.
-        Use readLines() method to read the lines from the input file named 'Day${dayPad}_input'. 
-        Print the result to the console using the following format : "Result=XX" where XX is the result value.
-        Optimize the algorithm to be be efficient and fast so that solution can be found in a reasonable amount of time.
-        Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation.
+considering the following problem:
+${content}
+
+please write a kotlin class named ${dayPad}, with a main function, to solve this problem.
+the main method should compute : 
+- the result for the sample file 'Day${dayPad}_star1_sample', and try to assert using provided value
+- the result named 'result1' for the input file 'Day${dayPad}_input'
+$prompt2
+Use readLines() method to read the lines of the file. 
+Print the result to the console using the following format : "Result=XX" where XX is the result value.
+Optimize the algorithm to be be efficient and fast so that solution can be found in a reasonable amount of time.
+Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation.
         """;
     }
 
