@@ -68,6 +68,9 @@ class Setup {
             val prompt = getPrompt(content)
             val answer = runCody(prompt)
 
+            if (answer.isBlank())
+                throw Exception("Answer is blank")
+
             writeFile("Day${dayPad}_star${star}_answer.txt", answer)
             println("Answer saved for Day${dayPad} star$star")
 
@@ -241,10 +244,9 @@ $code
 
     fun authCody(): Boolean {
         val command = mutableListOf("sh", "-c", "cody auth login")
-//    val command = mutableListOf("sh", "-c", "cody auth whoami")
         val r = execute(command)
-//    val auth = r.contains("Authenticated as ")
-        val auth = r.contains("You are already logged in as ")
+        // login in error stream ??
+        val auth = r.error.contains("You are already logged in as ")
         if (!auth)
             throw Exception("Cody auth failed")
         return auth
@@ -258,20 +260,26 @@ $code
             """
         }else ""
 
+        val prompt1 = if (star==1){
+            """
+- the result for the sample file 'Day${dayPad}_star1_sample', and try to assert using provided value
+- the result named 'result1' for the input file 'Day${dayPad}_input'
+            """
+        }else ""
+
         return """
 considering the following problem:
 ${content}
 
-please write a kotlin class named ${dayPad}, with a main function, to solve this problem.
+then please write a Kotlin class named ${dayPad}, with a main function, to solve this problem.
 the main method should compute : 
-- the result for the sample file 'Day${dayPad}_star1_sample', and try to assert using provided value
-- the result named 'result1' for the input file 'Day${dayPad}_input'
+$prompt1
 $prompt2
 Use readLines() method to read the lines of the file. 
 Print the result to the console using the following format : "Result=XX" where XX is the result value.
 Optimize the algorithm to be be efficient and fast so that solution can be found in a reasonable amount of time.
 Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation.
-        """;
+""".trim();
     }
 
     /*
@@ -289,23 +297,25 @@ Use indexes as soon as you can to avoid re-calculating the same value and lost t
 
     fun executeSh(command: String): String {
         val commands = mutableListOf("sh", "-c", command)
-        return execute(commands)
+        return execute(commands).output
     }
 
-    fun execute(command: String): String {
+    fun execute(command: String): ShellResponse {
         return execute(command.split(' '))
     }
 
-    fun execute(commands: List<String>, stdin: String? = null): String {
+    data class ShellResponse(val exitCode: Int, val output: String, val error: String)
+
+    fun execute(commands: List<String>, stdin: String? = null): ShellResponse {
         println("-- execute: ${commands.joinToString(" ")}")
         val pb = ProcessBuilder(commands)
 //    val f = File(path)
 //    println("cwd> ${f.absolutePath}")
 //    pb.directory(File(f.absolutePath));
-        pb.inheritIO();
+        //pb.inheritIO();
         val p = pb
-            .redirectErrorStream(true)
-            .redirectOutput(ProcessBuilder.Redirect.PIPE)
+          //  .redirectErrorStream(true)
+          //  .redirectOutput(ProcessBuilder.Redirect.PIPE)
             .start()
         if (stdin != null) {
             p.outputWriter().use {
@@ -313,15 +323,21 @@ Use indexes as soon as you can to avoid re-calculating the same value and lost t
                 it.flush()
             }
         }
+        val error = p.errorStream.bufferedReader().readText()
         val output = p.inputStream.bufferedReader().readText()
         println("...waiting...")
         p.waitFor()
 
-        println("-- Command output>")
+        println("-- Command output >>>>>")
         println("$output")
-        println("<Command output")
+        println("<<<<< Command output")
+        if (error.isNotBlank()) {
+            println("-- Command error >>>>>")
+            println("$error")
+            println("<<<<< Command error")
+        }
 
-        return output
+        return ShellResponse(0,output, error)
     }
 
     fun buildRunProgram(dayPad: String): String {
