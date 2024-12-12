@@ -19,10 +19,10 @@ class Setup {
     val cody_accesstoken = System.getenv("SRC_ACCESS_TOKEN")
     val path = getPathSrc();
     val client = HttpClient(CIO){
-        install(Logging){
-            logger = Logger.DEFAULT
-            level = LogLevel.ALL
-        }
+//        install(Logging){
+//            logger = Logger.DEFAULT
+//            level = LogLevel.ALL
+//        }
     }
     val cody_path = "/Users/ludovic/.nvm/versions/node/v21.4.0/bin/cody"
     val node_path = "/usr/local/bin/node"
@@ -45,7 +45,7 @@ class Setup {
             val document = Jsoup.parse(html)
             val articles = document.select("main > article")
             val articlesCount = articles.size
-            star = requestedStar.or(articlesCount)
+            star = Math.max(requestedStar, articlesCount)
             println("********** Current star : $star")
             val article = articles.get(star - 1)
             val puzzleContent = article?.text()?.trim() ?: "Puzzle content not found."
@@ -78,7 +78,10 @@ class Setup {
             val totals = result.split(",")
             println("Result for totals: $totals")
 
-            val total = totals.getOrNull(star - 1) ?:
+            val total = if (totals.size==1)
+                result
+            else
+                totals.getOrNull(star - 1) ?:
                     throw Exception("Total not found for star $star in totals $totals")
 
             println("Will submit answer for day:$dayPad, star:$star = $total")
@@ -98,7 +101,7 @@ class Setup {
         val submissionResult = runBlocking {
                 httpForm(postUrl, total, day, star)
         }
-        println("Submission result: $submissionResult")
+        //println("Submission result: $submissionResult")
         //check submission Result
         val ok = submissionResult.contains("You're right")
         val nok = submissionResult.contains("That's not the right answer")
@@ -173,6 +176,8 @@ class Setup {
 
         val kotlinCode = """
 /*
+--- Day $dayPad star $star ---
+
 $title
 
 $comments
@@ -223,9 +228,14 @@ $code
 
     fun listContextFiles(path: String = "."): String {
         val currentDir = File(path)
-        return currentDir.walkTopDown()
+
+    return listOf("Day$dayPad.kt", "Utils.kt").map{ File(it) }
+//        return currentDir.walkTopDown()
             .filter { it.isFile }
+            .filter { it.exists() }
             .filter { !it.name.endsWith(".txt") }
+            .filter { !it.name.endsWith(".bat") }
+            .filter { !it.name.endsWith(".md") }
             .filter { it.name.endsWith(".kt") }
             .map { it.relativeTo(currentDir).path }
             .filter { !it.startsWith(".") }
@@ -246,8 +256,9 @@ $code
     fun getPrompt(content: String): String {
         return """
         ${content}
-        please write a kotlin class named ${dayPad}, with a main function, using 'Day${dayPad}_input' as input file.
-        Use readFileContent() method to read the content of the file. 
+        please write a kotlin class named ${dayPad}, with a main function, to solve this problem.
+        if a previous solution exists, make a part2 into class and keep part1 into this class, else create a part1.
+        Use readLines() method to read the lines from the input file named 'Day${dayPad}_input'. 
         Print the result to the console using the following format : "Result=XX" where XX is the result value.
         Optimize the algorithm to be be efficient and fast so that solution can be found in a reasonable amount of time.
         Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation.
@@ -320,7 +331,7 @@ $code
         val args = arrayOf("$star")
         val result = method.invoke(instance, args)
         // Case main() return value (not the case), result is printed out
-        return "Result=${result}"
+        return "(run-program) Result=${result}"
     }
 
     fun isNumeric(toCheck: String): Boolean {
@@ -336,7 +347,7 @@ $code
             println("Arguments: $arguments")
             val day = arguments.getOrDefault("day", "0").toInt()
             val star = arguments.getOrDefault("star", "1").toInt()
-            if (arguments.isEmpty()) {
+            if (arguments.containsKey("today")) {
                 println(">>Running today's puzzle")
                 setup.runToday(star)
             } else if (arguments.containsKey("daemon")) {
@@ -359,6 +370,9 @@ $code
             } else if (arguments.containsKey("day")) {
                 println(">>Running day ${day} star ${star}")
                 setup.runDay(day, star)
+            }else{
+                println(">>No arguments provided, running today's puzzle")
+                setup.runToday(star)
             }
 
         }
