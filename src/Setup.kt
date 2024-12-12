@@ -174,6 +174,9 @@ class Setup {
             .trim()
         val comments = answer.substringAfter("end-of-code", "").trim()
 
+        if (code.isBlank())
+            throw Exception("No code found in anwser : $answer")
+
         val kotlinCode = """
 /*
 --- Day $dayPad star $star ---
