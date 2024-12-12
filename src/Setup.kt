@@ -1,5 +1,6 @@
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
@@ -17,7 +18,12 @@ class Setup {
     val cody_endpoint = System.getenv("SRC_ENDPOINT")
     val cody_accesstoken = System.getenv("SRC_ACCESS_TOKEN")
     val path = getPathSrc();
-    val client = HttpClient(CIO)
+    val client = HttpClient(CIO){
+        install(Logging){
+            logger = Logger.DEFAULT
+            level = LogLevel.ALL
+        }
+    }
     val cody_path = "/Users/ludovic/.nvm/versions/node/v21.4.0/bin/cody"
     val node_path = "/usr/local/bin/node"
     val BIN_BASH = "/bin/bash"
@@ -30,7 +36,7 @@ class Setup {
         // Define URLs
         val puzzleUrl = "https://adventofcode.com/2024/day/$day"
         val inputUrl = "https://adventofcode.com/2024/day/$day/input"
-        val postUrl = "https://adventofcode.com/2024/day/$day/answer/"
+
         dayPad = day.toString().padStart(2, '0')
 
         try {
@@ -40,6 +46,7 @@ class Setup {
             val articles = document.select("main > article")
             val articlesCount = articles.size
             star = requestedStar.or(articlesCount)
+            println("********** Current star : $star")
             val article = articles.get(star - 1)
             val puzzleContent = article?.text()?.trim() ?: "Puzzle content not found."
             val sample = article?.select("pre > code")?.first()?.text()?.trim() ?: "Sample content not found."
@@ -76,17 +83,26 @@ class Setup {
 
             println("Will submit answer for day:$dayPad, star:$star = $total")
             //submit result
-            val submissionResult = httpForm( postUrl + star, total)
-            println("Submission result: $submissionResult")
-            //check submission Result
-            val ok = submissionResult.contains("You're right")
-            println("Submission day:$dayPad, star:$star total:$total = $submissionResult >> OK=$ok" )
+            submitSolution(total, day, star)
+
 
         } catch (e: IOException) {
             println("Error fetching data: ${e.message}")
         } finally {
             client.close()
         }
+    }
+
+    private fun submitSolution(total: String, day: Int, star: Int) {
+        val postUrl = "https://adventofcode.com/2024/day/$day/answer"
+        val submissionResult = runBlocking {
+                httpForm(postUrl, total, day, star)
+        }
+        println("Submission result: $submissionResult")
+        //check submission Result
+        val ok = submissionResult.contains("You're right")
+        val nok = submissionResult.contains("That's not the right answer")
+        println("Submission day:$dayPad, star:$star total:$total = $submissionResult >> OK=$ok" )
     }
 
     private suspend fun httpGet(
@@ -115,14 +131,33 @@ class Setup {
     }
     private suspend fun httpForm(
         postUrl: String,
-        answer: String
+        answer: String,
+        day: Int,
+        star: Int
     ): String {
-        val inputData = client.submitForm{
-            url(postUrl)
-            parameter("answer", answer)
-            header("cookie", "session=$session_cookie")
+        println("post to: ${postUrl}");
+        val response: HttpResponse = client.post(postUrl) {
+            headers {
+                append("content-type", "application/x-www-form-urlencoded")
+                append("referer", "https://adventofcode.com/2024/day/$day")
+                append("cookie", "session=$session_cookie")
+                append("origin", "https://adventofcode.com")
+                append("host", "adventofcode.com")
+            }
+            setBody("level=$star&answer=$answer")
+//            setBody(
+//                FormDataContent(
+//                    Parameters.build {
+//                        append("level", "$star")
+//                        append("answer", answer)
+//                    }
+//                )
+//            )
         }
-        return inputData.bodyAsText().trim()
+        println("HTTP form submit status: $response.status.value");
+        println("HTTP form submit headers: ${response.headers}");
+        println("HTTP form submit body: ${response.bodyAsText()}");
+        return response.bodyAsText().trim()
     }
 
     private fun writeFile(filename: String, content: String) {
@@ -130,8 +165,11 @@ class Setup {
     }
 
     private fun writecodeFile(title: String, answer: String) {
-        val code = answer.substringAfter("```kotlin").substringBefore("```").trim()
-        val comments = answer.substringAfter("```kotlin").substringAfter("```").trim()
+        val code = answer
+            .replaceBefore("```kotlin", "").replace("```kotlin", "// kotlin")
+            .replaceAfter("```", "").replace("```", "// end-of-code ")
+            .trim()
+        val comments = answer.substringAfter("end-of-code", "").trim()
 
         val kotlinCode = """
 /*
@@ -187,9 +225,10 @@ $code
         val currentDir = File(path)
         return currentDir.walkTopDown()
             .filter { it.isFile }
-//        .filter { !it.name.endsWith(".txt") }
-            .filter { it.name.endsWith(".kt") && it.path.contains("src/Day") }
+            .filter { !it.name.endsWith(".txt") }
+            .filter { it.name.endsWith(".kt") }
             .map { it.relativeTo(currentDir).path }
+            .filter { !it.startsWith(".") }
             .joinToString(",")
     }
 
@@ -207,8 +246,9 @@ $code
     fun getPrompt(content: String): String {
         return """
         ${content}
-        please write a kotlin class named ${dayPad}, with a main function, using ${dayPad}_input as input file. 
-        Print the result to the console using the following format : "Result=(XX)" where XX is the result value.
+        please write a kotlin class named ${dayPad}, with a main function, using 'Day${dayPad}_input' as input file.
+        Use readFileContent() method to read the content of the file. 
+        Print the result to the console using the following format : "Result=XX" where XX is the result value.
         Optimize the algorithm to be be efficient and fast so that solution can be found in a reasonable amount of time.
         Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation.
         """;
@@ -224,8 +264,7 @@ $code
         val cleanPrompt = prompt.replace("'", " ")
             .replace("\r", " ")
             .replace("\n", " ")
-        val r = executeSh("cody chat --context-file $fileList -m '$cleanPrompt'")
-        return r
+        return executeSh("cody chat --context-file $fileList -m '$cleanPrompt'")
     }
 
     fun executeSh(command: String): String {
@@ -267,15 +306,21 @@ $code
 
     fun buildRunProgram(dayPad: String): String {
         val content = executeSh("gradle run --args='--run $dayPad'")
-        val response = content.substringAfter(SEPARATOR).substringBefore(SEPARATOR).trim()
+        val response = content.substringAfter("Result=").replaceAfter("\n", "")
+            .replace("\n", "")
+            .replace(")", "")
+            .replace("(", "")
+            .trim()
         return response
     }
 
     fun runProgram(dayPad: String): String {
         val instance = Class.forName("Day$dayPad").getDeclaredConstructor().newInstance()
-        val method = instance.javaClass.getMethod("main")
-        val result = method.invoke(instance)
-        return "${SEPARATOR}${result}${SEPARATOR}"
+        val method = instance.javaClass.getMethod("main", Array<String>::class.java)
+        val args = arrayOf("$star")
+        val result = method.invoke(instance, args)
+        // Case main() return value (not the case), result is printed out
+        return "Result=${result}"
     }
 
     fun isNumeric(toCheck: String): Boolean {
@@ -283,8 +328,6 @@ $code
     }
 
     companion object {
-        private val SEPARATOR: String = "##"
-
         fun main(args: Array<String>) {
             println("Starting Advent of Code puzzle solver...")
 
@@ -295,13 +338,10 @@ $code
             val star = arguments.getOrDefault("star", "1").toInt()
             if (arguments.isEmpty()) {
                 println(">>Running today's puzzle")
-                //setup.runToday(star)
+                setup.runToday(star)
             } else if (arguments.containsKey("daemon")) {
                 println(">>Starting daemon")
                 setup.scheduleDailyTask()
-            } else if (arguments.containsKey("day")) {
-                println(">>Running day ${day} star ${star}")
-                setup.runDay(day, star)
             } else if (arguments.containsKey("run")) {
                 val dayPad = arguments.getOrDefault("run", "00")
                 println(">>Run program ${dayPad}")
@@ -312,6 +352,13 @@ $code
                 println(">>Build & run program ${dayPad}")
                 val response = setup.buildRunProgram(dayPad)
                 println(">>Build & run program returned: ${response}")
+            }else if (arguments.containsKey("solution")) {
+                val solution = arguments.getOrDefault("solution", "")
+                val response = setup.submitSolution(solution, day, star)
+                println(">>Build & run program returned: ${response}")
+            } else if (arguments.containsKey("day")) {
+                println(">>Running day ${day} star ${star}")
+                setup.runDay(day, star)
             }
 
         }
