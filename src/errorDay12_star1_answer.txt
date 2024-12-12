@@ -1,0 +1,14 @@
+- Logging in
+(node:86661) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+POST https://sourcegraph.com/.api/completions/stream?api-version=1&client-name=jetbrains&client-version=5.5.15 9e82e68bd89292d24645c400cbab78aa-e54f03a71317a333 - You can only call end() on a span once.
+
+ ✖ Unexpected error: {
+  "model": "anthropic/claude-3-5-sonnet-20240620",
+  "speaker": "assistant",
+  "error": {
+    "isChatErrorGuard": "isChatErrorGuard",
+    "message": "received no parseable response data from Anthropic",
+    "name": "Error"
+  }
+}
