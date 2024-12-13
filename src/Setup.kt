@@ -181,7 +181,6 @@ use Long instead of Int to avoid overflow.
         day: Int,
         star: Int
     ): String {
-        println("post to: ${postUrl}");
         val response: HttpResponse = client.post(postUrl) {
             headers {
                 append("content-type", "application/x-www-form-urlencoded")
@@ -192,9 +191,6 @@ use Long instead of Int to avoid overflow.
             }
             setBody("level=$star&answer=$answer")
         }
-        println("HTTP form submit status: $response.status.value");
-        println("HTTP form submit headers: ${response.headers}");
-        println("HTTP form submit body: ${response.bodyAsText()}");
         return response.bodyAsText().trim()
     }
 
