@@ -138,9 +138,10 @@ use Long instead of Int to avoid overflow.
         //println("Submission result: $submissionResult")
         //check submission Result
         val ok = submissionResult.contains("You're right")
-        val nok = submissionResult.contains("That's not the right answer")
+        val nok1 = submissionResult.contains("That's not the right answer")
         val nok2 = submissionResult.contains("You don't seem to be solving the right level")
-        if (nok || nok2) {
+        val nok3 = submissionResult.contains("You gave an answer too recently")
+        if (nok1 || nok2 || nok3) {
             println(" ** KO ** Submission day:$dayPad, star:$star total:$total ")
         }else if (ok) {
             println(" ** SUCCESS **. Submission day:$dayPad, star:$star total:$total >> OK=$ok")
