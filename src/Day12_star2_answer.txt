@@ -84,11 +84,11 @@ This solution uses a breadth-first search (BFS) approach to efficiently calculat
 6. We ensure that each region has at least 4 sides, as per the problem description.
 7. The total price is calculated by multiplying the area and number of sides for each region and summing them up.
 
-This implementation is optimized for efficiency:
-- It uses BFS to explore regions, which is generally faster than depth-first search for this type of problem.
-- It calculates area and sides in a single pass, avoiding the need for separate traversals.
-- It uses a visited array to prevent revisiting cells, reducing unnecessary computations.
-- It uses `Long` for calculations to avoid integer overflow.
+This solution should be efficient and fast, as it:
+- Uses BFS to explore regions in O(n) time, where n is the total number of cells.
+- Avoids recalculating values by using the visited array.
+- Uses Long instead of Int to prevent overflow.
+- Calculates area and sides in a single pass through each region.
 
 The main function calls `part2` and prints the result in the required format. Make sure to have the `readFileLines` function available in your `Utils.kt` file to read the input file.
 
