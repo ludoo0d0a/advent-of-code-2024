@@ -1,10 +1,12 @@
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.jsoup.Jsoup
 import java.io.File
@@ -20,6 +22,12 @@ class Setup {
     val cody_accesstoken = System.getenv("SRC_ACCESS_TOKEN")
     val path = getPathSrc();
     val client = HttpClient(CIO){
+        install(HttpRequestRetry) {
+            retryOnServerErrors(maxRetries = 10)
+            delayMillis { retry ->
+                retry * 1000L
+            } // retries every second
+        }
 //        install(Logging){
 //            logger = Logger.DEFAULT
 //            level = LogLevel.ALL
@@ -240,16 +248,16 @@ $code
 
         // Set the schedule: Every day at 6 AM
         val now = LocalDateTime.now()
-        val target = now.withHour(6).withMinute(1).withSecond(0)
+        val target = now.withHour(6).withMinute(0).withSecond(0)
         val nextRun = if (target.isAfter(now)) {
             target
         } else {
             target.plusHours(24)
         }
 
-        val delayMillis = java.time.Duration.between(now, nextRun).toMillis()
-        println("Next run scheduled for: $nextRun")
-        scheduler.scheduleAtFixedRate(task, delayMillis, 24 * 60 * 60 * 1000)  // Repeat daily
+        val delta = java.time.Duration.between(now, nextRun)
+        println("Next run scheduled for: $nextRun in $delta")
+        scheduler.schedule(task, delta.toMillis(), 24 * 60 * 60 * 1000)
     }
 
     fun runDay(day: Int, star: Int) {
