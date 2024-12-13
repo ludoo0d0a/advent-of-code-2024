@@ -1,56 +1,49 @@
-/**
- *
- * Day12 star 2
- * prompt requires :
- * > don't forget to count inner sides in regions
- *
- * This enhanced version correctly handles:
- *
- * External perimeter sides
- * Internal holes and their perimeters
- * Diagonal connections between regions
- * Minimum requirement of 4 sides per region
- * The diagonal checking ensures we don't miss any internal sides that contribute to the total perimeter, which is crucial for complex shapes like the E-shaped region in the examples.
- *
- *
+/*
+using an input file name 'Day12_input' representing gardens.
+A garden is an region defined by the same letter contiguous.
+Region can be found inside another one, so there are internal and external sides.
+Compute the numbers of  internal and external sides for each region.
+compute the area of each region, equals the count of same letters.
+compute the price of each area, by multiplying the region's area by its number of sides.
+compute the total price for files Day12_star2_sample0 and assert result is 80.
+compute the total price for files Day12_star2_sample1 and assert result is 236.
+compute the total price for files Day12_star2_sample2 and assert result is 368.
+compute the total price for files Day12_star2_sample3 and assert result is 1206.
+compute the total price for file Day12_input
  */
 
-
 class Day12 {
-    data class Region(
-        val area: Long = 0,
-        val sides: Long = 0
-    )
+    data class Region(val area: Long, val sides: Long)
 
     companion object {
         @JvmStatic
         fun main(args: Array<String>) {
-            testSample(0, 80L)
-            testSample(1, 236L)
-            testSample(2, 368L)
-            testSample(3, 1206L)
+            // Verify all samples
+            checkSample("Day12_star2_sample0", 80)
+            checkSample("Day12_star2_sample1", 236)
+            checkSample("Day12_star2_sample2", 368)
+            checkSample("Day12_star2_sample3", 1206)
 
-//            val input = readFileLines("Day12_input")
-//            val result2 = part2(input)
-//            println("Result2=$result2")
+            // Calculate final result
+            val result = calculateTotalPrice("Day12_input")
+            println("Final result: $result")
         }
 
-        private fun testSample(id: Int, expected: Long) {
-            val sample2 = readFileLines("Day12_star2_sample$id")
-            val r2 = part2(sample2)
-            println("Result sample $id=$r2")
-            assert(expected == r2)
+        private fun checkSample(filename: String, expected: Long) {
+            val result = calculateTotalPrice(filename)
+            check(result == expected) { "Sample $filename: got $result, expected $expected" }
+            println("Sample $filename verified: $result")
         }
 
-        private fun part2(input: List<String>): Long {
-            val grid = input.map { it.toCharArray() }.toTypedArray()
+        private fun calculateTotalPrice(filename: String): Long {
+            val grid = readFileLines(filename).map { it.toCharArray() }.toTypedArray()
             val visited = Array(grid.size) { BooleanArray(grid[0].size) }
             var totalPrice = 0L
 
-            for (i in grid.indices) {
-                for (j in grid[0].indices) {
-                    if (!visited[i][j]) {
-                        val region = exploreRegionDFS(grid, visited, i, j)
+            for (row in grid.indices) {
+                for (col in grid[0].indices) {
+                    if (!visited[row][col]) {
+                        val region = exploreRegion(grid, visited, row, col)
                         totalPrice += region.area * region.sides
                     }
                 }
@@ -58,36 +51,39 @@ class Day12 {
             return totalPrice
         }
 
-        private fun exploreRegionDFS(
-            grid: Array<CharArray>,
-            visited: Array<BooleanArray>,
-            row: Int,
-            col: Int
-        ): Region {
-            if (row !in grid.indices || col !in grid[0].indices ||
-                visited[row][col]) return Region()
-
-            val type = grid[row][col]
-            visited[row][col] = true
-            var area = 1L
+        private fun exploreRegion(grid: Array<CharArray>, visited: Array<BooleanArray>, startRow: Int, startCol: Int): Region {
+            val type = grid[startRow][startCol]
+            var area = 0L
             var sides = 0L
+            val queue = ArrayDeque<Pair<Int, Int>>()
+            queue.add(Pair(startRow, startCol))
 
-            // Count both external and internal sides
             val directions = arrayOf(-1 to 0, 1 to 0, 0 to -1, 0 to 1)
-            for ((dx, dy) in directions) {
-                val newRow = row + dx
-                val newCol = col + dy
 
-                when {
-                    newRow !in grid.indices || newCol !in grid[0].indices -> sides++
-                    grid[newRow][newCol] != type -> sides++ // Different type = side
-                    !visited[newRow][newCol] -> {
-                        val subRegion = exploreRegionDFS(grid, visited, newRow, newCol)
-                        area += subRegion.area
-                        sides += subRegion.sides
+            while (queue.isNotEmpty()) {
+                val (row, col) = queue.removeFirst()
+                if (visited[row][col]) continue
+
+                visited[row][col] = true
+                area++
+
+                for ((dx, dy) in directions) {
+                    val newRow = row + dx
+                    val newCol = col + dy
+
+                    when {
+                        // Count edge sides
+                        newRow !in grid.indices || newCol !in grid[0].indices -> sides++
+
+                        // Count sides between different types
+                        grid[newRow][newCol] != type -> sides++
+
+                        // Add unvisited same-type cells to queue
+                        !visited[newRow][newCol] -> queue.add(Pair(newRow, newCol))
                     }
-                    // For diagonal checks to count inner sides
-                    else -> {
+
+                    // Check diagonals for internal sides
+                    if (newRow in grid.indices && newCol in grid[0].indices) {
                         val diagonals = listOf(
                             Pair(dx, 0), Pair(0, dy),
                             Pair(-dx, 0), Pair(0, -dy)
