@@ -95,8 +95,12 @@ class Day13 {
         fun main(args: Array<String>) {
             val day13 = Day13()
             val input = readFileLines("Day13_input").toTypedArray()
-            println(day13.star1(input))
-            println(day13.star2(input))
+
+            val result1 = day13.star1(input)
+            println("Result1=$result1")
+
+            val result2 = day13.star1(input)
+            println("Result2=$result2")
         }
     }
 }
