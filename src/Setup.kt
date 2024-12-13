@@ -13,6 +13,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
+
 class Setup {
     val session_cookie = System.getenv("SESSION_COOKIE")
     val cody_endpoint = System.getenv("SRC_ENDPOINT")
@@ -139,7 +140,14 @@ use Long instead of Int to avoid overflow.
         val ok = submissionResult.contains("You're right")
         val nok = submissionResult.contains("That's not the right answer")
         val nok2 = submissionResult.contains("You don't seem to be solving the right level")
-        println("Submission day:$dayPad, star:$star total:$total = $submissionResult >> OK=$ok" )
+        if (nok || nok2) {
+            println(" ** KO ** Submission day:$dayPad, star:$star total:$total ")
+        }else if (ok) {
+            println(" ** SUCCESS **. Submission day:$dayPad, star:$star total:$total >> OK=$ok")
+        }else{
+            println(" ** KO **  with unknown error code detected - please check pattern in HTML")
+            println(submissionResult)
+        }
     }
 
     private suspend fun httpGet(
@@ -194,11 +202,14 @@ use Long instead of Int to avoid overflow.
     }
 
     private fun writecodeFile(title: String, answer: String) {
-        val code = answer
+        val EOC = "// end-of-code"
+        var code = answer
             .replaceBefore("```kotlin", "").replace("```kotlin", "// kotlin")
-            .replaceAfter("```", "").replace("```", "// end-of-code ")
+            .replace("```", EOC)
             .trim()
-        val comments = code.substringAfter("end-of-code", "").trim()
+        val comments = code.substringAfter("// end-of-code", "").trim()
+
+        code = code.replaceAfter(EOC, "")
 
         if (code.isBlank())
             throw Exception("No code found in anwser : $answer")
