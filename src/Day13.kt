@@ -94,7 +94,7 @@ class Day13 {
         @JvmStatic
         fun main(args: Array<String>) {
             val day13 = Day13()
-            val input = readLines("Day13_input").toTypedArray()
+            val input = readFileLines("Day13_input").toTypedArray()
             println(day13.star1(input))
             println(day13.star2(input))
         }

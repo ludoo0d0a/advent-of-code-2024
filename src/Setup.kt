@@ -31,6 +31,36 @@ class Setup {
 
     var star: Int = 1
 
+    fun getPrompt(content: String): String {
+        val prompt_star = if (star==1){
+            """
+A first method named 'part1', called from main() method, solves this first part of the problem.
+Use readFileLines() method to read the content of the input file, named 'Day${dayPad}_input'.
+Print the result of part1 to the console using the following format : "Result1=XX" where XX is the result value. 
+            """
+        }else {
+            """
+The first part of the problem is solved, now consider the second part of the problem, 
+Another method named 'part2', called from main() method, solves this second part of the problem.
+Use readFileLines() method to read the content of the input file, named 'Day${dayPad}_input'.
+Print the result of part2 to the console using the following format : "Result2=XX" where XX is the result value. 
+            """
+        }
+
+        return """
+considering the following problem: 
+
+${content}
+
+then please write a Kotlin class named ${dayPad}, with a main function, to solve this problem. 
+the main method should compute : 
+$prompt_star
+Optimize the algorithm to be be efficient and fast so that solution can be found in a reasonable amount of time. 
+Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation. 
+use Long instead of Int to avoid overflow.
+""".trim();
+    }
+
     // Function to fetch the puzzle and input for the current day
     suspend fun fetchPuzzleAndInput(day: Int, requestedStar: Int) {
         // Define URLs
@@ -57,15 +87,13 @@ class Setup {
             writeFile("Day${dayPad}_star${star}.txt", content)
             writeFile("Day${dayPad}_star${star}_sample.txt", sample)
 
-            // Fetch the puzzle input
             val inputData = httpGet(inputUrl)
-
-            // Save the input data to a file
             writeFile("Day${dayPad}_input.txt", inputData)
-            println("Puzzle and input for day $day fetched and saved successfully.")
+            println("Puzzle and input for day $day star $star fetched and saved successfully.")
 
             authCody()
             val prompt = getPrompt(content)
+            writeFile("Day${dayPad}_star${star}_prompt.txt", prompt)
             val answer = runCody(prompt)
 
             if (answer.isBlank())
@@ -87,10 +115,12 @@ class Setup {
                 totals.getOrNull(star - 1) ?:
                     throw Exception("Total not found for star $star in totals $totals")
 
+            if (!isNumeric(total))
+                throw Exception("Total is not numeric: $total")
+
             println("Will submit answer for day:$dayPad, star:$star = $total")
             //submit result
             submitSolution(total, day, star)
-
 
         } catch (e: IOException) {
             println("Error fetching data: ${e.message}")
@@ -108,6 +138,7 @@ class Setup {
         //check submission Result
         val ok = submissionResult.contains("You're right")
         val nok = submissionResult.contains("That's not the right answer")
+        val nok2 = submissionResult.contains("You don't seem to be solving the right level")
         println("Submission day:$dayPad, star:$star total:$total = $submissionResult >> OK=$ok" )
     }
 
@@ -167,7 +198,7 @@ class Setup {
             .replaceBefore("```kotlin", "").replace("```kotlin", "// kotlin")
             .replaceAfter("```", "").replace("```", "// end-of-code ")
             .trim()
-        val comments = answer.substringAfter("end-of-code", "").trim()
+        val comments = code.substringAfter("end-of-code", "").trim()
 
         if (code.isBlank())
             throw Exception("No code found in anwser : $answer")
@@ -226,10 +257,10 @@ $code
         runDay(currentDay, star)
     }
 
-    fun listContextFiles(path: String = "."): String {
+    fun listContextFiles(): String {
         val currentDir = File(path)
 
-    return listOf("Day$dayPad.kt", "Utils.kt").map{ File(it) }
+        return listOf("${path}Day$dayPad.kt", "${path}Utils.kt").map{ File(it) }
 //        return currentDir.walkTopDown()
             .filter { it.isFile }
             .filter { it.exists() }
@@ -252,35 +283,6 @@ $code
         return auth
     }
 
-    fun getPrompt(content: String): String {
-        val prompt2 = if (star==2){
-            """
-- the result for the sample file 'Day${dayPad}_star2_sample', and try to assert using provided value
-- the result named 'result2' for the input file 'Day${dayPad}_input'
-            """
-        }else ""
-
-        val prompt1 = if (star==1){
-            """
-- the result for the sample file 'Day${dayPad}_star1_sample', and try to assert using provided value
-- the result named 'result1' for the input file 'Day${dayPad}_input'
-            """
-        }else ""
-
-        return """
-considering the following problem:
-${content}
-
-then please write a Kotlin class named ${dayPad}, with a main function, to solve this problem.
-the main method should compute : 
-$prompt1
-$prompt2
-Use readLines() method to read the lines of the file. 
-Print the result to the console using the following format : "Result=XX" where XX is the result value.
-Optimize the algorithm to be be efficient and fast so that solution can be found in a reasonable amount of time.
-Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation.
-""".trim();
-    }
 
     /*
     cody auth login
@@ -289,15 +291,20 @@ Use indexes as soon as you can to avoid re-calculating the same value and lost t
     */
     fun runCody(prompt: String): String {
         val fileList = listContextFiles()
+        if (fileList.isBlank())
+            throw Exception("No context files found")
+
         val cleanPrompt = prompt.replace("'", " ")
             .replace("\r", " ")
             .replace("\n", " ")
-        return executeSh("cody chat --context-file $fileList -m '$cleanPrompt'")
+//        return executeSh("cody chat --context-file $fileList -m '$cleanPrompt'")
+        return executeSh("cody chat --context-file $fileList --stdin", prompt)
     }
 
-    fun executeSh(command: String): String {
+    fun executeSh(command: String, stdin: String? = null): String {
         val commands = mutableListOf("sh", "-c", command)
-        return execute(commands).output
+        writeFile("Day${dayPad}_star${star}_command.txt", command)
+        return execute(commands, stdin).output
     }
 
     fun execute(command: String): ShellResponse {
@@ -315,7 +322,7 @@ Use indexes as soon as you can to avoid re-calculating the same value and lost t
         //pb.inheritIO();
         val p = pb
           //  .redirectErrorStream(true)
-          //  .redirectOutput(ProcessBuilder.Redirect.PIPE)
+            .redirectOutput(ProcessBuilder.Redirect.PIPE)
             .start()
         if (stdin != null) {
             p.outputWriter().use {
@@ -342,7 +349,11 @@ Use indexes as soon as you can to avoid re-calculating the same value and lost t
 
     fun buildRunProgram(dayPad: String): String {
         val content = executeSh("gradle run --args='--run $dayPad'")
-        val response = content.substringAfter("Result=").replaceAfter("\n", "")
+        val response = content
+//            .substringAfter("Result=").
+            .substringAfter("Result") //Result2=1471452
+            .substringAfter("=")
+            .replaceAfter("\n", "")
             .replace("\n", "")
             .replace(")", "")
             .replace("(", "")

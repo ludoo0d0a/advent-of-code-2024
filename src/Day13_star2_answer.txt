@@ -1,0 +1,74 @@
+Certainly! Here's a Kotlin class named `Day13` with a `main` function to solve the problem you described:
+
+```kotlin:Day13.kt
+import kotlin.math.abs
+
+class Day13 {
+    companion object {
+        private const val OFFSET = 10_000_000_000_000L
+
+        data class Button(val x: Long, val y: Long)
+        data class Prize(val x: Long, val y: Long)
+        data class ClawMachine(val buttonA: Button, val buttonB: Button, val prize: Prize)
+
+        fun parseClawMachine(input: List<String>): ClawMachine {
+            val buttonA = parseButton(input[0])
+            val buttonB = parseButton(input[1])
+            val prize = parsePrize(input[2])
+            return ClawMachine(buttonA, buttonB, prize)
+        }
+
+        fun parseButton(input: String): Button {
+            val (x, y) = input.substringAfter(":").split(",")
+            return Button(x.trim().substringAfter("+").toLong(), y.trim().substringAfter("+").toLong())
+        }
+
+        fun parsePrize(input: String): Prize {
+            val (x, y) = input.substringAfter(":").split(",")
+            return Prize(x.trim().substringAfter("=").toLong() + OFFSET, y.trim().substringAfter("=").toLong() + OFFSET)
+        }
+
+        fun calculateTokens(machine: ClawMachine): Long {
+            val dx = abs(machine.prize.x - OFFSET - machine.buttonA.x) + abs(machine.prize.x - OFFSET - machine.buttonB.x)
+            val dy = abs(machine.prize.y - OFFSET - machine.buttonA.y) + abs(machine.prize.y - OFFSET - machine.buttonB.y)
+            return (dx + dy) / 2
+        }
+
+        @JvmStatic
+        fun main(args: Array<String>) {
+            // Sample file
+            val sampleMachines = readLines("Day13_star2_sample").chunked(4).map { parseClawMachine(it) }
+            val sampleResult = sampleMachines.sumOf { calculateTokens(it) }
+            println("Sample Result=$sampleResult")
+            assert(sampleResult == 66L) { "Sample result is incorrect" }
+
+            // Input file
+            val inputMachines = readLines("Day13_input").chunked(4).map { parseClawMachine(it) }
+            val result2 = inputMachines.sumOf { calculateTokens(it) }
+            println("Result=$result2")
+        }
+    }
+}
+```
+
+This solution does the following:
+
+1. We define data classes for `Button`, `Prize`, and `ClawMachine` to represent the problem's entities.
+
+2. We implement parsing functions to convert the input strings into our data classes. The `parsePrize` function adds the `OFFSET` to both X and Y coordinates.
+
+3. The `calculateTokens` function computes the number of tokens needed for a single claw machine. It uses the formula `(dx + dy) / 2`, where `dx` and `dy` are the sum of the absolute differences between the prize coordinates and each button's coordinates.
+
+4. In the `main` function, we:
+   - Read and process the sample file, calculate the result, and assert it against the expected value.
+   - Read and process the input file, calculate the result (named `result2`), and print it.
+
+5. We use `Long` instead of `Int` to avoid overflow issues.
+
+6. The solution is optimized by:
+   - Using `chunked(4)` to efficiently group the input lines for each claw machine.
+   - Calculating the tokens needed for each machine only once and summing the results.
+   - Using data classes to avoid repetitive parsing of the same data.
+
+This solution should be efficient and fast, able to handle large inputs in a reasonable amount of time. The use of `Long` ensures that we can handle the large coordinate values without overflow issues.
+

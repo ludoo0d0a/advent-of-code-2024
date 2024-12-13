@@ -6,9 +6,9 @@ import java.io.File
 
 fun readFileContent(name: String) = Path("src/$name.txt").readText().trim().replace("\r","")
 
-fun readLines(name: String) = readFileContent(name).lines()
+fun readFileLines(name: String) = readFileContent(name).lines()
 
-fun readMatrix(name: String) = readLines(name).map { it.toCharArray().toList() }
+fun readMatrix(name: String) = readFileLines(name).map { it.toCharArray().toList() }
 
 /**
  * Converts string to md5 hash.

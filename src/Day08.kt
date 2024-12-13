@@ -38,7 +38,7 @@ class Day08 {
     val DEBUG=true;
 
     fun main() {
-        val input = readLines("Day08_test1")   // BIG -> 966 not
+        val input = readFileLines("Day08_test1")   // BIG -> 966 not
 
         //val input = readInput("Day08_test") // ->34
         //val input = readInput("Day08_test2") // ->9

@@ -106,7 +106,7 @@ class Day10 {
             return totalRating
         }
 
-        val input = readLines("Day10_input")
+        val input = readFileLines("Day10_input")
 
 //        val sample1 = readInput("Day10_star1_sample")
 //        val r1 = sumTrailheadScores(sample1)
@@ -116,7 +116,7 @@ class Day10 {
         println("star1: Sum of trailhead scores: $result1")
 
         println("---- star2:")
-        val sample2 = readLines("Day10_star2_sample")
+        val sample2 = readFileLines("Day10_star2_sample")
         val r2 = part2(sample2)
         println("star2: Result sample = $r2")
         check(r2 == 227)

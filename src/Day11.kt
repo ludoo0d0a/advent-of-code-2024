@@ -1,6 +1,6 @@
 class Day11 {
     fun main(): String {
-        val input = readLines("Day11_input")
+        val input = readFileLines("Day11_input")
         val initialStones = input.first().split(" ").map { it.toLong() }
 
         val answer1 = part1(initialStones)

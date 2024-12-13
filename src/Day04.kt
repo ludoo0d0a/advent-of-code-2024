@@ -57,7 +57,7 @@ class Day04(){
     fun wordFinder() {
         search = "XMAS"
         //val lines = readInput("Day04_test") //-> 18
-        val lines = readLines("Day04_test1")
+        val lines = readFileLines("Day04_test1")
         val lineH = lines.joinToString(" ")
         val totalH = countRev(lineH)
     

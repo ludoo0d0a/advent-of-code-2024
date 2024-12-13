@@ -8,7 +8,7 @@ class Day03b(){
 
    fun main() {
 
-        var testInputs = readLines("Day03_test")
+        var testInputs = readFileLines("Day03_test")
         val line = testInputs.joinToString ("") { it }
             println("File has ${testInputs.size} lines")
     
