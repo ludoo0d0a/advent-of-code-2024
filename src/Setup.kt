@@ -67,6 +67,7 @@ $prompt_star
 Optimize the algorithm to be be efficient and fast so that solution can be found in a reasonable amount of time. 
 Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation. 
 use Long instead of Int to avoid overflow.
+Add this prompt in comment in the code.
 """.trim();
     }
 
