@@ -1,4 +1,5 @@
-considering the following problem:
+considering the following problem: 
+
 As you go to win the first prize, you discover that the claw is nowhere near where you expected it would be. Due to a unit conversion error in your measurements, the position of every prize is actually 10000000000000 higher on both the X and Y axis! Add 10000000000000 to the X and Y position of every prize. After making this change, the example above would now look like this: Button A: X+94, Y+34
 Button B: X+22, Y+67
 Prize: X=10000000008400, Y=10000000005400
@@ -16,14 +17,15 @@ Button B: X+27, Y+71
 Prize: X=10000000018641, Y=10000000010279
  Now, it is only possible to win a prize on the second and fourth claw machines. Unfortunately, it will take many more than 100 presses to do so. Using the corrected prize coordinates, figure out how to win as many prizes as possible. What is the fewest tokens you would have to spend to win all possible prizes?
 
-then please write a Kotlin class named 13, with a main function, to solve this problem.
+then please write a Kotlin class named 13, with a main function, to solve this problem. 
 the main method should compute : 
 
 
-- the result for the sample file 'Day13_star2_sample', and try to assert using provided value
-- the result named 'result2' for the input file 'Day13_input'
+the result for the sample file 'Day13_star2_sample', and try to assert using provided value, 
+the result named 'result2' for the input file 'Day13_input'. 
             
 Use readLines() method to read the lines of the file. 
-Print the result to the console using the following format : "Result=XX" where XX is the result value.
-Optimize the algorithm to be be efficient and fast so that solution can be found in a reasonable amount of time.
-Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation.
+Print the result to the console using the following format : "Result=XX" where XX is the result value. 
+Optimize the algorithm to be be efficient and fast so that solution can be found in a reasonable amount of time. 
+Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation. 
+use Long instead of Int to avoid overflow.
