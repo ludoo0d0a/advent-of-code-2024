@@ -25,12 +25,24 @@ class Day12 {
     companion object {
         @JvmStatic
         fun main(args: Array<String>) {
-            val result2 = part2()
-            println("Result2=$result2")
+            testSample(0, 80L)
+            testSample(1, 236L)
+            testSample(2, 368L)
+            testSample(3, 1206L)
+
+//            val input = readFileLines("Day12_input")
+//            val result2 = part2(input)
+//            println("Result2=$result2")
         }
 
-        private fun part2(): Long {
-            val input = readFileLines("Day12_input")
+        private fun testSample(id: Int, expected: Long) {
+            val sample2 = readFileLines("Day12_star2_sample$id")
+            val r2 = part2(sample2)
+            println("Result sample $id=$r2")
+            assert(expected == r2)
+        }
+
+        private fun part2(input: List<String>): Long {
             val grid = input.map { it.toCharArray() }.toTypedArray()
             val visited = Array(grid.size) { BooleanArray(grid[0].size) }
             var totalPrice = 0L
