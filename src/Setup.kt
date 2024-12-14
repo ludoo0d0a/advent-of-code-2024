@@ -43,7 +43,7 @@ class Setup {
         val prompt_star = if (star==1){
             """
 A first method named 'part1', called from main() method, solves this first part of the problem.
-Use readFileLines() method to read the content of the input file, named 'Day${dayPad}_input'.
+Use readFileLines() method from Utils.kt to read the content of the input file, named 'Day${dayPad}_input'.
 Print the result of part1 to the console using the following format : "Result1=XX" where XX is the result value. 
             """
         }else {
@@ -60,7 +60,7 @@ considering the following problem:
 
 ${content}
 
-then please write a Kotlin class named ${dayPad}, with a main function, to solve this problem. 
+then please write a Kotlin class named Day${dayPad}, with a main function, to solve this problem. 
 the main method should compute : 
 $prompt_star
 Optimize the algorithm to be be efficient and fast so that solution can be found in a reasonable amount of time. 
