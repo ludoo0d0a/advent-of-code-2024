@@ -1,25 +1,26 @@
 /*
 Using an input file name 'Day12_input' representing gardens.
 A garden is an region defined by the limit around the same contiguous letter.
-A Region can be found inside another one, so there are internal and external sides.
-The region has a shape of a polygon, count the numbers of sides of the polygon.
+A region can be found inside another one.
+The region borders draw a polygon, count the numbers of lines of the polygon.
+Don't forget to count inside lines.
 Compute the area of each region which is the count of letters in this region.
-Compute the price of each area, by multiplying the region's area by the number of sides of the related polygon.
+Compute the price of each area, by multiplying the region's area by the number of lines of the related polygon.
 Compute the total price for files Day12_star2_sample0 and assert result is 80.
 Compute the total price for files Day12_star2_sample1 and assert result is 236.
 Compute the total price for files Day12_star2_sample2 and assert result is 368.
 Compute the total price for files Day12_star2_sample3 and assert result is 1206.
 Compute the total price for file Day12_input
-Log information for each region: sides count, area, price
+Log information for each region: lines count, area, price
+show the whole code for the kotlin class.
 */
-
 class Day12 {
     data class Region(
         val type: Char,
         val area: Long,
-        val sides: Long
+        val lines: Long
     ) {
-        val price: Long get() = area * sides
+        val price: Long get() = area * lines
     }
 
     companion object {
@@ -27,13 +28,11 @@ class Day12 {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            // Verify samples
             checkSample("Day12_star2_sample0", 80)
             checkSample("Day12_star2_sample1", 236)
             checkSample("Day12_star2_sample2", 368)
             checkSample("Day12_star2_sample3", 1206)
 
-            // Process actual input
             val result = calculateTotalPrice("Day12_input")
             println("Final result: $result")
         }
@@ -56,7 +55,7 @@ class Day12 {
                         if (region != null) {
                             regions.add(region)
                             if (DEBUG) {
-                                println("Region ${region.type}: Area=${region.area}, Sides=${region.sides}, Price=${region.price}")
+                                println("Region ${region.type}: Area=${region.area}, Lines=${region.lines}, Price=${region.price}")
                             }
                         }
                     }
@@ -71,7 +70,7 @@ class Day12 {
 
             val type = grid[startRow][startCol]
             var area = 0L
-            var sides = 0L
+            var lines = 0L
             val toExplore = ArrayDeque<Pair<Int, Int>>()
             toExplore.add(startRow to startCol)
 
@@ -88,14 +87,14 @@ class Day12 {
                     val newCol = col + dy
 
                     when {
-                        newRow !in grid.indices || newCol !in grid[0].indices -> sides++
-                        grid[newRow][newCol] != type -> sides++
+                        newRow !in grid.indices || newCol !in grid[0].indices -> lines++
+                        grid[newRow][newCol] != type -> lines++
                         !visited[newRow][newCol] -> toExplore.add(newRow to newCol)
                     }
                 }
             }
 
-            return Region(type, area, maxOf(sides, 4))
+            return Region(type, area, maxOf(lines / 2, 4))
         }
     }
 }
