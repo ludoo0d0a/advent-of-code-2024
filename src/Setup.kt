@@ -102,7 +102,7 @@ Show the whole code for the kotlin class.
             writeFile("Day${dayPad}_input.txt", inputData)
             println("Puzzle and input for day $day star $star fetched and saved successfully.")
 
-            val res =  promptAndSolve(content, title)
+            val res =  promptAndSolve(content, title, true, true)
             if (res){
                 archiveCode(day)
             }
@@ -132,19 +132,20 @@ Show the whole code for the kotlin class.
         }
     }
 
-    fun promptFromFile(): Boolean {
+    fun promptFromFile(submitAnswer: Boolean): Boolean {
         val prompt = readFile("Day${dayPad}_star${star}_prompt.txt")
         if (prompt.isBlank())
             throw Exception("Prompt is blank")
 
         val title = "Problem day $day star $star"
-        return promptAndSolve(prompt, title)
+        return promptAndSolve(prompt, title, false, submitAnswer)
     }
 
-    private fun promptAndSolve(content: String, title: String): Boolean {
+    private fun promptAndSolve(content: String, title: String, savePrompt: Boolean, submitAnswer: Boolean): Boolean {
         authCody()
         val prompt = getPrompt(content)
-        writeFile("Day${dayPad}_star${star}_prompt.txt", prompt)
+        if (savePrompt)
+            writeFile("Day${dayPad}_star${star}_prompt.txt", prompt)
         val answer = runCody(prompt)
 
         if (answer.isBlank())
@@ -167,6 +168,11 @@ Show the whole code for the kotlin class.
 
         if (!isNumeric(total))
             throw Exception("Total is not numeric: $total")
+
+        if (!submitAnswer) {
+            println("Will NOT submit answer for day:$dayPad, star:$star = $total")
+            return false
+        }
 
         println("Will submit answer for day:$dayPad, star:$star = $total")
         //submit result
@@ -453,8 +459,9 @@ $code
                 val response = setup.runProgram()
                 println(response)
             } else if (arguments.containsKey("prompt")) {
-                println(">>Request prompt day $day star $star")
-                val response = setup.promptFromFile()
+                val submitAnswer = arguments.containsKey("submit")
+                println(">>Request prompt day $day star $star - submitAnswer: $submitAnswer")
+                val response = setup.promptFromFile(submitAnswer)
                 println(response)
             } else if (arguments.containsKey("build")) {
                 println(">>Build & run program $day")
