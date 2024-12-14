@@ -73,7 +73,7 @@ Show the whole code for the kotlin class.
     }
 
     // Function to fetch the puzzle and input for the current day
-    private suspend fun fetchPuzzleAndInput(day: Int, requestedStar: Int): Boolean {
+    private suspend fun fetchPuzzleAndInput(): Boolean {
         // Define URLs
         val puzzleUrl = "https://adventofcode.com/2024/day/$day"
         val inputUrl = "https://adventofcode.com/2024/day/$day/input"
@@ -86,7 +86,7 @@ Show the whole code for the kotlin class.
             val document = Jsoup.parse(html)
             val articles = document.select("main > article")
             val articlesCount = articles.size
-            star = Math.max(requestedStar, articlesCount)
+            star = Math.max(star, articlesCount) //star2 if found star1 solved
             println("********** Current star : $star")
             val article = articles.get(star - 1)
             val puzzleContent = article?.text()?.trim() ?: "Puzzle content not found."
@@ -170,10 +170,10 @@ Show the whole code for the kotlin class.
 
         println("Will submit answer for day:$dayPad, star:$star = $total")
         //submit result
-        return submitSolution(total, day, star)
+        return submitSolution(total)
     }
 
-    private fun submitSolution(total: String, day: Int, star: Int): Boolean {
+    private fun submitSolution(total: String): Boolean {
         val postUrl = "https://adventofcode.com/2024/day/$day/answer"
         val submissionResult = runBlocking {
                 httpForm(postUrl, total, day, star)
@@ -300,23 +300,25 @@ $code
         scheduler.schedule(task, delta.toMillis(), 24 * 60 * 60 * 1000)
     }
 
-    fun runDay(day: Int, star: Int) {
+    fun runDay() {
         println("Running task for Day $day")
 
         runBlocking {
-            val res = fetchPuzzleAndInput(day, star)
+            val res = fetchPuzzleAndInput()
             if (res && star==1) {
-                fetchPuzzleAndInput(day, 2)
+                initDay(day, 2)
+                fetchPuzzleAndInput()
             }
         }
     }
 
     fun runToday(star: Int = 1) {
         val currentDay = LocalDate.now().dayOfMonth
-        runDay(currentDay, star)
+        initDay(currentDay, star)
+        runDay()
     }
 
-    fun listContextFiles(): String {
+    private fun listContextFiles(): String {
         val currentDir = File(path)
 
         return listOf("${path}Day$dayPad.kt", "${path}Utils.kt").map{ File(it) }
@@ -332,7 +334,7 @@ $code
             .joinToString(",")
     }
 
-    fun authCody(): Boolean {
+    private fun authCody(): Boolean {
         val command = mutableListOf("sh", "-c", "cody auth login")
         val r = execute(command)
         // login in error stream ??
@@ -348,7 +350,7 @@ $code
     cody auth whoami
     cody chat --context-file src/Day01.kt,src/Day02.kt,... -m 'Are there code smells in this file?'
     */
-    fun runCody(prompt: String): String {
+    private fun runCody(prompt: String): String {
         val fileList = listContextFiles()
         if (fileList.isBlank())
             throw Exception("No context files found")
@@ -360,19 +362,19 @@ $code
         return executeSh("cody chat --context-file $fileList --stdin", prompt)
     }
 
-    fun executeSh(command: String, stdin: String? = null): String {
+    private fun executeSh(command: String, stdin: String? = null): String {
         val commands = mutableListOf("sh", "-c", command)
         writeFile("Day${dayPad}_star${star}_command.txt", command)
         return execute(commands, stdin).output
     }
 
-    fun execute(command: String): ShellResponse {
+    private fun execute(command: String): ShellResponse {
         return execute(command.split(' '))
     }
 
     data class ShellResponse(val exitCode: Int, val output: String, val error: String)
 
-    fun execute(commands: List<String>, stdin: String? = null): ShellResponse {
+    private fun execute(commands: List<String>, stdin: String? = null): ShellResponse {
         println("-- execute: ${commands.joinToString(" ")}")
         val pb = ProcessBuilder(commands)
 //    val f = File(path)
@@ -395,11 +397,11 @@ $code
         p.waitFor()
 
         println("-- Command output >>>>>")
-        println("$output")
+        println(output)
         println("<<<<< Command output")
         if (error.isNotBlank()) {
             println("-- Command error >>>>>")
-            println("$error")
+            println(error)
             println("<<<<< Command error")
         }
 
@@ -420,7 +422,7 @@ $code
         return response
     }
 
-    fun runProgram(dayPad: String): String {
+    fun runProgram(): String {
         val instance = Class.forName("Day$dayPad").getDeclaredConstructor().newInstance()
         val method = instance.javaClass.getMethod("main", Array<String>::class.java)
         val args = arrayOf("$star")
@@ -429,7 +431,7 @@ $code
         return "(run-program) Result=${result}"
     }
 
-    fun isNumeric(toCheck: String): Boolean {
+    private fun isNumeric(toCheck: String): Boolean {
         return toCheck.toDoubleOrNull() != null
     }
 
@@ -442,6 +444,7 @@ $code
             val day = arguments.getOrDefault("day", "0").toInt()
             val star = arguments.getOrDefault("star", "1").toInt()
             val setup = Setup();
+            setup.initDay(day, star)
             //TODO val setup = Setup(day, star);
             if (arguments.containsKey("today")) {
                 println(">>Running today's puzzle")
@@ -450,27 +453,24 @@ $code
                 println(">>Starting daemon")
                 setup.scheduleDailyTask()
             } else if (arguments.containsKey("run")) {
-                val dayPad = setup.initDay(day, star)
-                println(">>Run program $dayPad")
-                val response = setup.runProgram(dayPad)
+                println(">>Run program $day")
+                val response = setup.runProgram()
                 println(response)
             } else if (arguments.containsKey("prompt")) {
                 println(">>Request prompt day $day star $star")
-                setup.initDay(day, star)
                 val response = setup.promptFromFile()
                 println(response)
             } else if (arguments.containsKey("build")) {
-                val dayPad = setup.initDay(day, star)
-                println(">>Build & run program $dayPad")
+                println(">>Build & run program $day")
                 val response = setup.buildRunProgram()
                 println(">>Build & run program returned: $response")
             }else if (arguments.containsKey("solution")) {
                 val solution = arguments.getOrDefault("solution", "")
-                val response = setup.submitSolution(solution, day, star)
+                val response = setup.submitSolution(solution)
                 println(">>Build & run program returned: $response")
             } else if (arguments.containsKey("day")) {
                 println(">>Running day $day star $star")
-                setup.runDay(day, star)
+                setup.runDay()
             }else{
                 println(">>No arguments provided, running today's puzzle")
                 setup.runToday(star)
