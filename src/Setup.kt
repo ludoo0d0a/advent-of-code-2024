@@ -6,7 +6,6 @@ import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.jsoup.Jsoup
 import java.io.File
@@ -51,7 +50,7 @@ Print the result of part1 to the console using the following format : "Result1=X
             """
 The first part of the problem is solved, now consider the second part of the problem, 
 Another method named 'part2', called from main() method, solves this second part of the problem.
-Use readFileLines() method to read the content of the input file, named 'Day${dayPad}_input'.
+Use already provided readFileLines() method from Utils.kt to read the content of the input file, named 'Day${dayPad}_input'.
 Print the result of part2 to the console using the following format : "Result2=XX" where XX is the result value. 
             """
         }
@@ -68,6 +67,7 @@ Optimize the algorithm to be be efficient and fast so that solution can be found
 Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation. 
 use Long instead of Int to avoid overflow.
 Add this prompt in comment in the code.
+Show the whole code for the kotlin class.
 """.trim();
     }
 
@@ -101,36 +101,7 @@ Add this prompt in comment in the code.
             writeFile("Day${dayPad}_input.txt", inputData)
             println("Puzzle and input for day $day star $star fetched and saved successfully.")
 
-            authCody()
-            val prompt = getPrompt(content)
-            writeFile("Day${dayPad}_star${star}_prompt.txt", prompt)
-            val answer = runCody(prompt)
-
-            if (answer.isBlank())
-                throw Exception("Answer is blank")
-
-            writeFile("Day${dayPad}_star${star}_answer.txt", answer)
-            println("Answer saved for Day${dayPad} star$star")
-
-            writecodeFile(title, answer)
-
-            // execute kotlin program
-            val result = buildRunProgram(dayPad)
-            val totals = result.split(",")
-            println("Result for totals: $totals")
-
-            val total = if (totals.size==1)
-                result
-            else
-                totals.getOrNull(star - 1) ?:
-                    throw Exception("Total not found for star $star in totals $totals")
-
-            if (!isNumeric(total))
-                throw Exception("Total is not numeric: $total")
-
-            println("Will submit answer for day:$dayPad, star:$star = $total")
-            //submit result
-            submitSolution(total, day, star)
+            promptAndSolve(content, title, day)
 
         } catch (e: IOException) {
             println("Error fetching data: ${e.message}")
@@ -138,8 +109,45 @@ Add this prompt in comment in the code.
             client.close()
         }
     }
+    fun promptFromFile(day: Int, star: Int): String {
+        val prompt = readFile("Day${dayPad}_star${this.star}_prompt.txt")
+        val title = "Problem day $day star $star"
+        return promptAndSolve(prompt, title, day)
+    }
 
-    private fun submitSolution(total: String, day: Int, star: Int) {
+    private fun promptAndSolve(content: String, title: String, day: Int): String {
+        authCody()
+        val prompt = getPrompt(content)
+        writeFile("Day${dayPad}_star${star}_prompt.txt", prompt)
+        val answer = runCody(prompt)
+
+        if (answer.isBlank())
+            throw Exception("Answer is blank")
+
+        writeFile("Day${dayPad}_star${star}_answer.txt", answer)
+        println("Answer saved for Day${dayPad} star$star")
+
+        writecodeFile(title, answer)
+
+        // execute kotlin program
+        val result = buildRunProgram(dayPad)
+        val totals = result.split(",")
+        println("Result for totals: $totals")
+
+        val total = if (totals.size == 1)
+            result
+        else
+            totals.getOrNull(star - 1) ?: throw Exception("Total not found for star $star in totals $totals")
+
+        if (!isNumeric(total))
+            throw Exception("Total is not numeric: $total")
+
+        println("Will submit answer for day:$dayPad, star:$star = $total")
+        //submit result
+        return submitSolution(total, day, star)
+    }
+
+    private fun submitSolution(total: String, day: Int, star: Int): String {
         val postUrl = "https://adventofcode.com/2024/day/$day/answer"
         val submissionResult = runBlocking {
                 httpForm(postUrl, total, day, star)
@@ -158,6 +166,7 @@ Add this prompt in comment in the code.
             println(" ** KO **  with unknown error code detected - please check pattern in HTML")
             println(submissionResult)
         }
+        return total
     }
 
     private suspend fun httpGet(
@@ -205,6 +214,9 @@ Add this prompt in comment in the code.
 
     private fun writeFile(filename: String, content: String) {
         File("${path}${filename}").writeText(content)
+    }
+    private fun readFile(filename: String): String {
+        return File("${path}${filename}").readText()
     }
 
     private fun writecodeFile(title: String, answer: String) {
@@ -410,6 +422,10 @@ $code
                 val dayPad = arguments.getOrDefault("run", "00")
                 println(">>Run program ${dayPad}")
                 val response = setup.runProgram(dayPad)
+                println(response)
+            } else if (arguments.containsKey("prompt")) {
+                println(">>Request prompt day ${day} star $star")
+                val response = setup.promptFromFile(day, star)
                 println(response)
             } else if (arguments.containsKey("build")) {
                 val dayPad = arguments.getOrDefault("build", "00")
