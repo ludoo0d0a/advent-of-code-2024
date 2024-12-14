@@ -111,6 +111,9 @@ Show the whole code for the kotlin class.
     }
     fun promptFromFile(day: Int, star: Int): String {
         val prompt = readFile("Day${dayPad}_star${this.star}_prompt.txt")
+        if (prompt.isBlank())
+            throw Exception("Prompt is blank")
+
         val title = "Problem day $day star $star"
         return promptAndSolve(prompt, title, day)
     }
@@ -154,7 +157,7 @@ Show the whole code for the kotlin class.
         }
         //println("Submission result: $submissionResult")
         //check submission Result
-        val ok = submissionResult.contains("You're right")
+        val ok = submissionResult.contains("That's the right answer")
         val nok1 = submissionResult.contains("That's not the right answer")
         val nok2 = submissionResult.contains("You don't seem to be solving the right level")
         val nok3 = submissionResult.contains("You gave an answer too recently")
