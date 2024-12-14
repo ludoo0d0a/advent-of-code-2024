@@ -1,5 +1,7 @@
 considering the following problem: 
 
+considering the following problem: 
+
 Fortunately, the Elves are trying to order so much fence that they qualify for a bulk discount! Under the bulk discount, instead of using the perimeter to calculate the price, you need to use the number of sides each region has. Each straight section of fence counts as a side, regardless of how long it is. Consider this example again: AAAA
 BBCD
 BBCC
@@ -42,3 +44,17 @@ Use indexes as soon as you can to avoid re-calculating the same value and lost t
 use Long instead of Int to avoid overflow.
 Add this prompt in comment in the code.
 Show the whole code for kotlin class
+
+then please write a Kotlin class named Day12, with a main function, to solve this problem. 
+the main method should compute : 
+
+The first part of the problem is solved, now consider the second part of the problem, 
+Another method named 'part2', called from main() method, solves this second part of the problem.
+Use already provided readFileLines() method from Utils.kt to read the content of the input file, named 'Day12_input'.
+Print the result of part2 to the console using the following format : "Result2=XX" where XX is the result value. 
+            
+Optimize the algorithm to be be efficient and fast so that solution can be found in a reasonable amount of time. 
+Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation. 
+use Long instead of Int to avoid overflow.
+Add this prompt in comment in the code.
+Show the whole code for the kotlin class.
