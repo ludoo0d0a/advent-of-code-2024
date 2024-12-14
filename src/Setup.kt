@@ -17,9 +17,9 @@ import java.util.*
 
 class Setup {
     val session_cookie = System.getenv("SESSION_COOKIE")
-    val cody_endpoint = System.getenv("SRC_ENDPOINT")
-    val cody_accesstoken = System.getenv("SRC_ACCESS_TOKEN")
-    val path = getPathSrc();
+//    val cody_endpoint = System.getenv("SRC_ENDPOINT")
+//    val cody_accesstoken = System.getenv("SRC_ACCESS_TOKEN")
+    val path = getPathSrc()
     val client = HttpClient(CIO){
         install(HttpRequestRetry) {
             retryOnServerErrors(maxRetries = 10)
@@ -32,9 +32,9 @@ class Setup {
 //            level = LogLevel.ALL
 //        }
     }
-    val cody_path = "/Users/ludovic/.nvm/versions/node/v21.4.0/bin/cody"
-    val node_path = "/usr/local/bin/node"
-    val BIN_BASH = "/bin/bash"
+//    val cody_path = "/Users/ludovic/.nvm/versions/node/v21.4.0/bin/cody"
+//    val node_path = "/usr/local/bin/node"
+//    val BIN_BASH = "/bin/bash"
     var dayPad: String = ""
 
     var day: Int = 0
@@ -69,7 +69,7 @@ Use indexes as soon as you can to avoid re-calculating the same value and lost t
 use Long instead of Int to avoid overflow.
 Add this prompt in comment in the code.
 Show the whole code for the kotlin class.
-""".trim();
+""".trim()
     }
 
     // Function to fetch the puzzle and input for the current day
@@ -102,7 +102,7 @@ Show the whole code for the kotlin class.
             writeFile("Day${dayPad}_input.txt", inputData)
             println("Puzzle and input for day $day star $star fetched and saved successfully.")
 
-            val res =  promptAndSolve(content, title, day)
+            val res =  promptAndSolve(content, title)
             if (res){
                 archiveCode(day)
             }
@@ -138,10 +138,10 @@ Show the whole code for the kotlin class.
             throw Exception("Prompt is blank")
 
         val title = "Problem day $day star $star"
-        return promptAndSolve(prompt, title, day)
+        return promptAndSolve(prompt, title)
     }
 
-    private fun promptAndSolve(content: String, title: String, day: Int): Boolean {
+    private fun promptAndSolve(content: String, title: String): Boolean {
         authCody()
         val prompt = getPrompt(content)
         writeFile("Day${dayPad}_star${star}_prompt.txt", prompt)
@@ -355,10 +355,6 @@ $code
         if (fileList.isBlank())
             throw Exception("No context files found")
 
-        val cleanPrompt = prompt.replace("'", " ")
-            .replace("\r", " ")
-            .replace("\n", " ")
-//        return executeSh("cody chat --context-file $fileList -m '$cleanPrompt'")
         return executeSh("cody chat --context-file $fileList --stdin", prompt)
     }
 
@@ -443,7 +439,7 @@ $code
             println("Arguments: $arguments")
             val day = arguments.getOrDefault("day", "0").toInt()
             val star = arguments.getOrDefault("star", "1").toInt()
-            val setup = Setup();
+            val setup = Setup()
             setup.initDay(day, star)
             //TODO val setup = Setup(day, star);
             if (arguments.containsKey("today")) {
