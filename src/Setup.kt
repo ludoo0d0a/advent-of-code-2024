@@ -156,7 +156,7 @@ Show the whole code for the kotlin class.
         writecodeFile(title, answer)
 
         // execute kotlin program
-        val result = buildRunProgram(dayPad)
+        val result = buildRunProgram()
         val totals = result.split(",")
         println("Result for totals: $totals")
 
@@ -406,7 +406,7 @@ $code
         return ShellResponse(0,output, error)
     }
 
-    fun buildRunProgram(dayPad: String): String {
+    fun buildRunProgram(): String {
         val content = executeSh("gradle run --args='--run $dayPad'")
         val response = content
 //            .substringAfter("Result=").
@@ -462,7 +462,7 @@ $code
             } else if (arguments.containsKey("build")) {
                 val dayPad = setup.initDay(day, star)
                 println(">>Build & run program $dayPad")
-                val response = setup.buildRunProgram(dayPad)
+                val response = setup.buildRunProgram()
                 println(">>Build & run program returned: $response")
             }else if (arguments.containsKey("solution")) {
                 val solution = arguments.getOrDefault("solution", "")
