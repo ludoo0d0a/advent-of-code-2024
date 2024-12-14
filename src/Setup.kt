@@ -405,7 +405,7 @@ $code
     }
 
     fun buildRunProgram(): String {
-        val content = executeSh("gradle run --args='--run $dayPad'")
+        val content = executeSh("gradle run --args='--run --day $day'")
         val response = content
 //            .substringAfter("Result=").
             .substringAfter("Result") //Result2=1471452
