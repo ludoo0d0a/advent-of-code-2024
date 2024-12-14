@@ -62,16 +62,18 @@ Print the result of part2 to the console using the following format : "Result2=X
 
 A garden is a region defined by all adjacent letter of the same value.
 A garden can be found inside another one bigger.
-Count the numbers of line of the perimeter of each garden
-Don't forget to count inside lines.
+Count the numbers of sides of the perimeter of each garden.
+The perimeter can be computed using a contour tracing algorithm. (Square Tracing algorithm or Moore-Neighbor Tracing)
+Don't forget to count inside sides.
 Compute the area of each garden by counting the numbers of letters in this garden.
-Compute the price of each garden, by multiplying the area by the number of lines of the perimeter.
-Compute the total price for files Day12_star2_sample0 and assert result is 80.
-Compute the total price for files Day12_star2_sample1 and assert result is 236.
-Compute the total price for files Day12_star2_sample2 and assert result is 368.
-Compute the total price for files Day12_star2_sample3 and assert result is 1206.
-Compute the total price for file Day12_input
-Log information for each garden: lines count, area, price
+Compute the price of each garden, by multiplying the area by the number of sides of the perimeter.
+The sides are counted by following the outer perimeter of each shape, where each straight line segment counts as one side
+Compute the total price for files Day12_star2_sample0, log details and check expected result is 80. (A area=4 sides=4, B area=4 sides=4, C area=4 sides=8, D area=3 sides=4)
+Compute the total price for files Day12_star2_sample1, log details and check expected result is 236.
+Compute the total price for files Day12_star2_sample2, log details and check expected result is 368.
+Compute the total price for files Day12_star2_sample3, log details and check expected result is 1206.
+
+Log information for each garden and samples: sides count, area, price
 
 Optimize the algorithm to be be efficient and fast so that solution can be found in a reasonable amount of time. 
 Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation. 
