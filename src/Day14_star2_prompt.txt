@@ -1,0 +1,21 @@
+considering the following problem: 
+
+During the bathroom break, someone notices that these robots seem awfully similar to ones built and used at the North Pole. If they're the same type of robots, they should have a hard-coded Easter egg: very rarely, most of the robots should arrange themselves into a picture of a Christmas tree. What is the fewest number of seconds that must elapse for the robots to display the Easter egg?
+
+then please write a Kotlin class named 14, with a main function, to solve this problem. 
+the main method should compute : 
+
+The first part of the problem is solved, now consider the second part of the problem, 
+Another method named 'part2', called from main() method, solves this second part of the problem.
+Use readFileLines() method to read the content of the input file, named 'Day14_input'.
+Print the result of part2 to the console using the following format : "Result2=XX" where XX is the result value. 
+
+To find a Christmas tree, detect how many robots are adjacents to each other.
+If more than half are adjacent to each other, it is a christmas tree.
+If a Christmas tree is found, display the map and continue on the next iterations to find any other christmas trees.
+
+Optimize the algorithm to be be efficient and fast so that solution can be found in a reasonable amount of time. 
+Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation. 
+use Long instead of Int to avoid overflow.
+Add this prompt in comment in the code.
+Show the whole code for kotlin class
