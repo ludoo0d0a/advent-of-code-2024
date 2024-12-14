@@ -72,7 +72,7 @@ Show the whole code for the kotlin class.
     }
 
     // Function to fetch the puzzle and input for the current day
-    suspend fun fetchPuzzleAndInput(day: Int, requestedStar: Int) {
+    private suspend fun fetchPuzzleAndInput(day: Int, requestedStar: Int): Boolean {
         // Define URLs
         val puzzleUrl = "https://adventofcode.com/2024/day/$day"
         val inputUrl = "https://adventofcode.com/2024/day/$day/input"
@@ -101,15 +101,30 @@ Show the whole code for the kotlin class.
             writeFile("Day${dayPad}_input.txt", inputData)
             println("Puzzle and input for day $day star $star fetched and saved successfully.")
 
-            promptAndSolve(content, title, day)
+            val res =  promptAndSolve(content, title, day)
+            if (res){
+                archiveCode(day)
+            }
+            return res
 
         } catch (e: IOException) {
             println("Error fetching data: ${e.message}")
         } finally {
             client.close()
         }
+        return false
     }
-    fun promptFromFile(day: Int, star: Int): String {
+
+    private fun archiveCode(day: Int) {
+        try {
+        execute("git add -A") //add all
+        execute("git commit -m Solution day $day star $star")
+        } catch (e: IOException) {
+            println(" **** Error ***** git add/commit: ${e.message}")
+        }
+    }
+
+    fun promptFromFile(day: Int, star: Int): Boolean {
         val prompt = readFile("Day${dayPad}_star${this.star}_prompt.txt")
         if (prompt.isBlank())
             throw Exception("Prompt is blank")
@@ -118,7 +133,7 @@ Show the whole code for the kotlin class.
         return promptAndSolve(prompt, title, day)
     }
 
-    private fun promptAndSolve(content: String, title: String, day: Int): String {
+    private fun promptAndSolve(content: String, title: String, day: Int): Boolean {
         authCody()
         val prompt = getPrompt(content)
         writeFile("Day${dayPad}_star${star}_prompt.txt", prompt)
@@ -150,7 +165,7 @@ Show the whole code for the kotlin class.
         return submitSolution(total, day, star)
     }
 
-    private fun submitSolution(total: String, day: Int, star: Int): String {
+    private fun submitSolution(total: String, day: Int, star: Int): Boolean {
         val postUrl = "https://adventofcode.com/2024/day/$day/answer"
         val submissionResult = runBlocking {
                 httpForm(postUrl, total, day, star)
@@ -165,11 +180,12 @@ Show the whole code for the kotlin class.
             println(" ** KO ** Submission day:$dayPad, star:$star total:$total ")
         }else if (ok) {
             println(" ** SUCCESS **. Submission day:$dayPad, star:$star total:$total >> OK=$ok")
+            return true
         }else{
             println(" ** KO **  with unknown error code detected - please check pattern in HTML")
             println(submissionResult)
         }
-        return total
+        return false
     }
 
     private suspend fun httpGet(
@@ -280,7 +296,10 @@ $code
         println("Running task for Day $day")
 
         runBlocking {
-            fetchPuzzleAndInput(day, star)
+            val res = fetchPuzzleAndInput(day, star)
+            if (res && star==1) {
+                fetchPuzzleAndInput(day, 2)
+            }
         }
     }
 
