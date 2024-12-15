@@ -12,15 +12,13 @@ class Day15 {
         fun part1(input: List<String>): Long {
             val (map, moves) = parseInput(input)
             val warehouse = Warehouse(map)
-
-            for (move in moves) {
+            moves.forEachIndexed{ i, move ->
                 warehouse.moveRobot(move)
                 if (DEBUG) {
-                    println("After move $move:")
+                    println("$i - After move $move:")
                     warehouse.printMap()
                 }
             }
-
             return warehouse.calculateGPSSum()
         }
 
@@ -28,42 +26,37 @@ class Day15 {
             val (map, moves) = parseInput(input)
             val scaledMap = scaleMap(map)
             val warehouse = Warehouse(scaledMap)
-
-            for (move in moves) {
+            if (DEBUG)
+                warehouse.printMap()
+            moves.forEachIndexed{ i, move ->
                 warehouse.moveRobot(move)
                 if (DEBUG) {
-                    println("After move $move:")
+                    println("$i - After move $move:")
                     warehouse.printMap()
                 }
             }
-
             return warehouse.calculateGPSSum()
         }
 
-        private fun parseInput(input: List<String>): Pair<List<String>, List<Char>> {
-            val mapEndIndex = input.indexOfFirst { it.isEmpty() }
-            val map = input.subList(0, mapEndIndex)
-            val moves = input.last().toList()
-            return Pair(map, moves)
-        }
+        private fun parseInput(input: List<String>) =
+            Pair(input.takeWhile { it.isNotEmpty() }, input.last().toList())
 
-        private fun scaleMap(map: List<String>): List<String> {
-            return map.map { line ->
-                line.map { char ->
-                    when (char) {
-                        '#' -> "##"
-                        'O' -> "[]"
-                        '.' -> ".."
-                        '@' -> "@."
-                        else -> throw IllegalArgumentException("Invalid character: $char")
-                    }
-                }.joinToString("")
-            }
+        private fun scaleMap(map: List<String>) = map.map { line ->
+            line.map { char ->
+                when (char) {
+                    '#' -> "##"
+                    'O' -> "[]"
+                    '.' -> ".."
+                    '@' -> "@."
+                    else -> throw IllegalArgumentException("Invalid character: $char")
+                }
+            }.joinToString("")
         }
     }
 
     data class Position(val x: Int, val y: Int) {
         operator fun plus(other: Position) = Position(x + other.x, y + other.y)
+        operator fun minus(other: Position) = Position(x - other.x, y - other.y)
     }
 
     data class Wall(val position: Position)
@@ -71,6 +64,16 @@ class Day15 {
         fun move(movement: Position) {
             leftPosition = leftPosition + movement
             rightPosition = rightPosition + movement
+        }
+
+        fun isAdjacent(other: Box, direction: Position): Boolean {
+            return when {
+                direction.x > 0 -> this.rightPosition.x + 1 == other.leftPosition.x
+                direction.x < 0 -> this.leftPosition.x - 1 == other.rightPosition.x
+                direction.y > 0 -> this.rightPosition.y + 1 == other.leftPosition.y
+                direction.y < 0 -> this.leftPosition.y - 1 == other.rightPosition.y
+                else -> false
+            } && this.leftPosition.x == other.leftPosition.x || this.leftPosition.y == other.leftPosition.y
         }
     }
     data class Robot(var position: Position)
@@ -108,7 +111,6 @@ class Day15 {
             }
 
             val newPosition = robot.position + movement
-
             when {
                 canMoveTo(newPosition) -> {
                     robot.position = newPosition
@@ -119,33 +121,80 @@ class Day15 {
             }
         }
 
+        private fun pushBoxes(startPosition: Position, movement: Position) {
+            val firstBox = boxes.find { it.leftPosition == startPosition || it.rightPosition == startPosition }
+                ?: return
+
+            val boxesToMove = mutableListOf(firstBox)
+            var lastBoxes = listOf(firstBox)
+
+            while (true) {
+                val nextBoxes = boxes.filter { box ->
+                     lastBoxes.all { lastBox ->
+                         lastBox.isAdjacent(box, movement)
+                     }
+                 }
+                lastBoxes = nextBoxes.filter { nextBox ->
+                    !boxesToMove.contains(nextBox)
+                }
+                if (lastBoxes.isEmpty())
+                    break;
+                boxesToMove.addAll(lastBoxes)
+            }
+
+            if (canMoveAllTo(movement, boxesToMove)) {
+                boxesToMove.reversed().forEach { it.move(movement) }
+                robot.position = robot.position + movement
+            }
+        }
+
+        private fun canMoveAllTo(movement: Position, boxesToMove: MutableList<Box>): Boolean {
+            val lastBoxes = findLastBoxes(boxesToMove, movement)
+
+            if (movement.x > 0)
+                return lastBoxes.all{ box -> canMoveTo(box.rightPosition + movement) }
+            else if (movement.x < 0)
+                return lastBoxes.all{ box -> canMoveTo(box.leftPosition + movement) }
+            else if  (movement.y > 0)
+                return lastBoxes.all{ box -> canMoveTo(box.leftPosition + movement) && canMoveTo(box.rightPosition + movement)}
+            else if  (movement.y < 0)
+                return lastBoxes.all{ box -> canMoveTo(box.leftPosition + movement) && canMoveTo(box.rightPosition + movement)}
+            else
+                return false
+        }
+        private fun findLastBoxes(boxes: MutableList<Box>, movement: Position) : List<Box>{
+            return boxes.filter { box ->
+                val positionToCheck = if (movement.x > 0) {
+                    box.rightPosition + movement
+                } else if (movement.x < 0) {
+                    box.leftPosition + movement
+                } else if (movement.y > 0) {
+                    box.rightPosition + movement
+                } else {
+                    box.leftPosition + movement
+                }
+
+                // A box is "last" if there are no other boxes in the movement direction
+                !boxes.any { otherBox ->
+                    otherBox != box &&
+                            (otherBox.leftPosition == positionToCheck || otherBox.rightPosition == positionToCheck)
+                }
+            }
+        }
+
+
         private fun canMoveTo(position: Position): Boolean {
-            return position.x in 0 until width &&
-                    position.y in 0 until height &&
-                    !walls.any { it.position == position } &&
+            if (position.x !in 0 until width || position.y !in 0 until height) {
+                return false
+            }
+
+            return !walls.any { it.position == position } &&
                     !boxes.any { it.leftPosition == position || it.rightPosition == position }
         }
 
+
         private fun isBoxAt(position: Position): Boolean {
             return boxes.any { it.leftPosition == position || it.rightPosition == position }
-        }
-
-        private fun pushBoxes(startPosition: Position, movement: Position) {
-            val boxChain = mutableListOf<Box>()
-            var currentPos = startPosition
-
-            while (isBoxAt(currentPos)) {
-                val box = boxes.first { it.leftPosition == currentPos || it.rightPosition == currentPos }
-                boxChain.add(box)
-                currentPos = if (movement.x > 0) box.rightPosition + movement else box.leftPosition + movement
-            }
-
-            if (canMoveTo(currentPos)) {
-                boxChain.reversed().forEach { box ->
-                    box.move(movement)
-                }
-                robot.position = robot.position + movement
-            }
         }
 
         fun calculateGPSSum(): Long {
@@ -156,14 +205,12 @@ class Day15 {
 
         fun printMap() {
             val display = Array(height) { CharArray(width) { '.' } }
-
             walls.forEach { display[it.position.y][it.position.x] = '#' }
             boxes.forEach { box ->
                 display[box.leftPosition.y][box.leftPosition.x] = '['
                 display[box.rightPosition.y][box.rightPosition.x] = ']'
             }
             display[robot.position.y][robot.position.x] = '@'
-
             display.forEach { println(it.joinToString("")) }
             println()
         }
