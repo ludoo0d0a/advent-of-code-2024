@@ -14,7 +14,7 @@ class Day15 {
 
             val input = readFileLines("Day15_input")
             val result2_input = part2(input)
-            println("Result2=$result2_input") //1413011 ko
+            println("Result2=$result2_input") //1413011 ko. //1476429
         }
 
         fun part1(input: List<String>): Long {
@@ -219,12 +219,9 @@ class Day15 {
 
         fun calculateGPSSum(): Long {
             return boxes.sumOf { box ->
-//                //val closestX = minOf(box.leftPosition.x, box.rightPosition.x)
-//                val closestX = box.leftPosition.x
-//                val y = box.leftPosition.y  // y is same for both edges
-//                100L * y + closestX
-
-                100L * box.leftPosition.y + box.leftPosition.x
+                val closestX = box.leftPosition.x
+                val y = box.leftPosition.y  // y is same for both edges
+                100L * y + closestX
             }
         }
 
