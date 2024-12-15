@@ -170,13 +170,13 @@ Input files consist of 2 section :
 the first lines containing '#' represents the map,
 the next lines containing one of the following characters : '>', '<', '^', 'v' represents the move instructions.
 
-Walls, represented by '#', can exist inside the map.
 A single box is now represented by 2 characters '[]'.
-To move horizontally, the 2 characters has to move together.
+To move horizontally, the 2 characters has to move together, but from 1 character on each iteration.
 To move vertically, the 2 characters has to move together as well, if robot pushed one of the character.
 
-Display map on each iteration.
 
+Display map on each iteration, using a boolean flag constant DEBUG=true.
+Use map as List<CharArray>
 Optimize the algorithm to be efficient and fast so that solution can be found in a reasonable amount of time.
 Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation. 
 use Long instead of Int to avoid overflow.
