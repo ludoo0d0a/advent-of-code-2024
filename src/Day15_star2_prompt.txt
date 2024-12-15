@@ -171,18 +171,28 @@ the first lines containing '#' represents the map,
 the next lines containing one of the following characters : '>', '<', '^', 'v' represents the move instructions.
 
 The new warehouse has to be scaled horizontally before computing.
+The scaled warehouse has to be parsed into an oriented object system, using objects classes Robot(position), Box(position, width, height), Wall(position) and Warehouse(width, height).
+Class Box should be
+'
+data class Box(var x: Int, var y: Int, var width: Int)
+'
+where x,y is the position of top left corner of the box.
 
-In the new scaled warehouse, a box is bigger, width is now 2.
-So a single box now is 2 characters '[]', that can never be splitted or replaced.
+In the new scaled warehouse, a box has a width of 2.
+A robot is 1 unit wide.
+A wall is 1 unit wide.
+The map should store list of Box classes, and index all positions by coordinates so that it is easy to find the box at a given position. ths isBox method should rely on this index.
+The map should also store list of Wall classes, Robot class.
+
+Use dedicated algorithm to detect adjacent boxes, behind first pushed box by the robot ; and if there is some space behind all boxes of the group, the boxes of the group will be pushed.
 
 When a robot moves, if space is empty, robot goes to the new position.
-When a robot moves left, and space is occupied by ']', the robot will push the box and all adjacent boxes on the left will be moved from 1 unit, if there is some space behind
-When a robot moves right, and reaches a box ']', the robot will push the box and all adjacent boxes on the right will be moved from 1 unit, if there is some space behind
-When a robot moves up, and reaches part of a box, either '[' or ']', the robot will push the whole box (the other character from the pair '[', ']' will be moved with it) and all adjacent boxes (1 box = '[]') above will be moved from 1 unit, if there is some space behind
-When a robot moves down, and reaches part of a box, either '[' or ']', the robot will push the whole box (the other character from the pair '[', ']' will be moved with it) and all adjacent boxes (1 box = '[]') under will be moved from 1 unit, if there is some space behind
+When a robot moves left, and space is occupied by a box, the robot will push the box and all adjacent boxes on the left will be moved from 1 unit, if there is some space behind
+When a robot moves right, and reaches a box , the robot will push the box and all adjacent boxes on the right will be moved from 1 unit, if there is some space behind
+When a robot moves up, and reaches part of a box, the robot will push the whole box and all adjacent boxes above will be moved from 1 unit, if there is some space behind
+When a robot moves down, and reaches part of a box, the robot will push the whole box and all adjacent boxes under will be moved from 1 unit, if there is some space behind
 
 Display map on each iteration, using a boolean flag constant DEBUG=false.
-Use map as List<CharArray>
 Optimize the algorithm to be efficient and fast so that solution can be found in a reasonable amount of time.
 Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation. 
 use Long instead of Int to avoid overflow.
