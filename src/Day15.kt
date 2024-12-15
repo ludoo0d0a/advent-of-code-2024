@@ -21,10 +21,10 @@ class Day15 {
             val (map, moves) = parseInput(input)
             val warehouse = Warehouse(map)
             moves.forEachIndexed{ i, move ->
-                warehouse.moveRobot(move)
+                warehouse.moveRobot(move, i)
                 if (DEBUG) {
                     println("$i - After move $move:")
-                    warehouse.printMap()
+                    warehouse.printMap(i = i)
                 }
             }
             return warehouse.calculateGPSSum()
@@ -37,11 +37,7 @@ class Day15 {
             if (DEBUG)
                 warehouse.printMap()
             moves.forEachIndexed{ i, move ->
-                warehouse.moveRobot(move)
-                if (DEBUG) {
-                    println("$i - After move $move:")
-                    warehouse.printMap()
-                }
+                warehouse.moveRobot(move, i)
             }
             return warehouse.calculateGPSSum()
         }
@@ -114,7 +110,7 @@ class Day15 {
             robot = Robot(robotPosition)
         }
 
-        fun moveRobot(direction: Char) {
+        fun moveRobot(direction: Char, i: Int=0) {
             val movement = when (direction) {
                 '>' -> Position(1, 0)
                 '<' -> Position(-1, 0)
@@ -127,12 +123,16 @@ class Day15 {
             when {
                 canMoveTo(newPosition) -> {
                     robot.position = newPosition
+                    if (DEBUG) printMap(direction = direction, i = i)
                 }
                 isBoxAt(newPosition) -> {
+                    val boxesToMove = findAdjacentBoxes(boxes.first { it.leftPosition == newPosition || it.rightPosition == newPosition }, movement)
+                    if (DEBUG) printMap(boxesToMove, direction, i)
                     pushBoxes(newPosition, movement)
                 }
             }
         }
+
 
         private fun pushBoxes(startPosition: Position, movement: Position) {
             val firstBox = boxes.find { it.leftPosition == startPosition || it.rightPosition == startPosition }
@@ -222,16 +222,44 @@ class Day15 {
             }
         }
 
-        fun printMap() {
+        fun printMap(boxesToHighlight: List<Box> = emptyList(), direction: Char = '@', i: Int=0) {
+            val RESET = "\u001B[0m"
+            val RED = "\u001B[31m"
+            val GREEN = "\u001B[32m"
+            val YELLOW = "\u001B[33m"
+            val BLUE = "\u001B[34m"
+
+            println("Map @$i")
+
             val display = Array(height) { CharArray(width) { '.' } }
             walls.forEach { display[it.position.y][it.position.x] = '#' }
+
             boxes.forEach { box ->
-                display[box.leftPosition.y][box.leftPosition.x] = '['
-                display[box.rightPosition.y][box.rightPosition.x] = ']'
+                if (box in boxesToHighlight) {
+                    display[box.leftPosition.y][box.leftPosition.x] = '('
+                    display[box.rightPosition.y][box.rightPosition.x] = ')'
+                } else {
+                    display[box.leftPosition.y][box.leftPosition.x] = '['
+                    display[box.rightPosition.y][box.rightPosition.x] = ']'
+                }
             }
-            display[robot.position.y][robot.position.x] = '@'
-            display.forEach { println(it.joinToString("")) }
+
+            display[robot.position.y][robot.position.x] = direction //'@'
+
+            display.forEach { line ->
+                println(line.joinToString("") { char ->
+                    when (char) {
+                        '#' -> "$YELLOW#$RESET"
+                        '@' -> "$RED@$RESET"
+                        direction -> "$RED$direction$RESET"
+                        '[', ']' -> "$GREEN$char$RESET"
+                        '(', ')' -> "$BLUE$char$BLUE"
+                        else -> char.toString()
+                    }
+                })
+            }
             println()
         }
+
     }
 }
