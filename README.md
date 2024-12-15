@@ -64,3 +64,6 @@ gradle run --args="--day 11"
 
 
 
+# TODO
+store tentatives results in a file
+retry if not success, adding 'suggest another alternative' in prompt

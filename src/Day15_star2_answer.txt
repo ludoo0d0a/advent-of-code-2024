@@ -1,12 +1,17 @@
-Here's the Kotlin class `Day15` with the implementation to solve the problem as described:
+Here's the Kotlin class `Day15` with the implementation to solve the problem as requested:
 
 ```kotlin:Day15.kt
 import java.util.*
 
+// Prompt: This code solves the warehouse robot problem with scaled-up maps.
+// It uses efficient algorithms and data structures to handle large inputs.
+// The map is represented as List<CharArray> for quick access and modification.
+// Long is used instead of Int to avoid overflow in calculations.
+
 class Day15 {
     companion object {
-        const val DEBUG = true
-        const val EXPECTED_SAMPLE = 9021L
+        private const val DEBUG = false
+        private const val EXPECTED_SAMPLE = 9021L
 
         @JvmStatic
         fun main(args: Array<String>) {
@@ -23,22 +28,23 @@ class Day15 {
         }
 
         fun part1(input: List<String>): Long {
-            // Implementation of part1 (not shown here as per instructions)
-            return 0L
+            val (map, moves) = parseInput(input)
+            val finalMap = simulateRobot(map, moves)
+            return calculateGPSSum(finalMap)
         }
 
         fun part2(input: List<String>): Long {
-            val (map, instructions) = parseInput(input)
+            val (map, moves) = parseInput(input)
             val scaledMap = scaleMap(map)
-            val finalMap = simulateRobot(scaledMap, instructions)
+            val finalMap = simulateRobot(scaledMap, moves)
             return calculateGPSSum(finalMap)
         }
 
         private fun parseInput(input: List<String>): Pair<List<CharArray>, String> {
-            val mapEndIndex = input.indexOfFirst { !it.contains('#') }
-            val map = input.subList(0, mapEndIndex).map { it.toCharArray() }
-            val instructions = input.subList(mapEndIndex, input.size).joinToString("")
-            return Pair(map, instructions)
+            val mapEnd = input.indexOfFirst { it.isEmpty() }
+            val map = input.subList(0, mapEnd).map { it.toCharArray() }
+            val moves = input.last()
+            return Pair(map, moves)
         }
 
         private fun scaleMap(map: List<CharArray>): List<CharArray> {
@@ -49,125 +55,118 @@ class Day15 {
                         'O' -> listOf('[', ']')
                         '.' -> listOf('.', '.')
                         '@' -> listOf('@', '.')
-                        else -> listOf(char, char)
+                        else -> listOf(char)
                     }
                 }.toCharArray()
             }
         }
 
-        private fun simulateRobot(map: List<CharArray>, instructions: String): List<CharArray> {
-            var currentMap = map.map { it.clone() }.toMutableList()
-            var robotPosition = findRobotPosition(currentMap)
+        private fun simulateRobot(map: List<CharArray>, moves: String): List<CharArray> {
+            var robotPos = findRobot(map)
+            val newMap = map.map { it.clone() }.toMutableList()
 
-            for (instruction in instructions) {
-                val (newMap, newPosition) = moveRobot(currentMap, robotPosition, instruction)
-                currentMap = newMap
-                robotPosition = newPosition
+            for (move in moves) {
+                val (newX, newY) = when (move) {
+                    '>' -> Pair(robotPos.first + 1, robotPos.second)
+                    '<' -> Pair(robotPos.first - 1, robotPos.second)
+                    '^' -> Pair(robotPos.first, robotPos.second - 1)
+                    'v' -> Pair(robotPos.first, robotPos.second + 1)
+                    else -> robotPos
+                }
+
+                if (canMove(newMap, newX, newY)) {
+                    newMap[robotPos.second][robotPos.first] = '.'
+                    newMap[newY][newX] = '@'
+                    robotPos = Pair(newX, newY)
+                } else if (canPush(newMap, robotPos, Pair(newX, newY))) {
+                    push(newMap, robotPos, Pair(newX, newY))
+                    newMap[robotPos.second][robotPos.first] = '.'
+                    newMap[newY][newX] = '@'
+                    robotPos = Pair(newX, newY)
+                }
 
                 if (DEBUG) {
-                    println("After move $instruction:")
-                    printMap(currentMap)
+                    println("After move $move:")
+                    newMap.forEach { println(it) }
                     println()
                 }
             }
 
-            return currentMap
+            return newMap
         }
 
-        private fun findRobotPosition(map: List<CharArray>): Pair<Int, Int> {
+        private fun findRobot(map: List<CharArray>): Pair<Int, Int> {
             for (y in map.indices) {
                 for (x in map[y].indices) {
-                    if (map[y][x] == '@') return Pair(y, x)
+                    if (map[y][x] == '@') return Pair(x, y)
                 }
             }
             throw IllegalStateException("Robot not found in the map")
         }
 
-        private fun moveRobot(map: List<CharArray>, position: Pair<Int, Int>, direction: Char): Pair<MutableList<CharArray>, Pair<Int, Int>> {
-            val (y, x) = position
-            val newMap = map.map { it.clone() }.toMutableList()
-            val (dy, dx) = when (direction) {
-                '^' -> -1 to 0
-                'v' -> 1 to 0
-                '<' -> 0 to -1
-                '>' -> 0 to 1
-                else -> throw IllegalArgumentException("Invalid direction: $direction")
-            }
-
-            var newY = y + dy
-            var newX = x + dx
-
-            if (newMap[newY][newX] == '[' && newMap[newY][newX + 1] == ']') {
-                val boxMoved = moveBox(newMap, newY, newX, dy, dx)
-                if (boxMoved) {
-                    newMap[y][x] = '.'
-                    newMap[newY][newX] = '@'
-                }
-            } else if (newMap[newY][newX] == '.') {
-                newMap[y][x] = '.'
-                newMap[newY][newX] = '@'
-            } else {
-                newY = y
-                newX = x
-            }
-
-            return Pair(newMap, Pair(newY, newX))
+        private fun canMove(map: List<CharArray>, x: Int, y: Int): Boolean {
+            return y in map.indices && x in map[y].indices && map[y][x] == '.'
         }
 
-        private fun moveBox(map: MutableList<CharArray>, y: Int, x: Int, dy: Int, dx: Int): Boolean {
-            var currentY = y
-            var currentX = x
+        private fun canPush(map: List<CharArray>, from: Pair<Int, Int>, to: Pair<Int, Int>): Boolean {
+            val dx = to.first - from.first
+            val dy = to.second - from.second
+            var x = to.first
+            var y = to.second
+
+            while (y in map.indices && x in map[y].indices && (map[y][x] == '[' || map[y][x] == ']')) {
+                x += dx
+                y += dy
+            }
+
+            return y in map.indices && x in map[y].indices && map[y][x] == '.'
+        }
+
+        private fun push(map: MutableList<CharArray>, from: Pair<Int, Int>, to: Pair<Int, Int>) {
+            val dx = to.first - from.first
+            val dy = to.second - from.second
+            var x = to.first
+            var y = to.second
             val boxesToMove = mutableListOf<Pair<Int, Int>>()
 
-            while (currentY in map.indices && currentX in map[0].indices &&
-                map[currentY][currentX] == '[' && map[currentY][currentX + 1] == ']'
-            ) {
-                boxesToMove.add(Pair(currentY, currentX))
-                currentY += dy
-                currentX += dx
+            while (y in map.indices && x in map[y].indices && (map[y][x] == '[' || map[y][x] == ']')) {
+                boxesToMove.add(Pair(x, y))
+                x += dx
+                y += dy
             }
 
-            if (currentY !in map.indices || currentX !in map[0].indices || map[currentY][currentX] != '.') {
-                return false
+            for (i in boxesToMove.size - 1 downTo 0) {
+                val (bx, by) = boxesToMove[i]
+                map[by + dy][bx + dx] = map[by][bx]
             }
-
-            for ((boxY, boxX) in boxesToMove.asReversed()) {
-                map[boxY + dy][boxX + dx] = '['
-                map[boxY + dy][boxX + dx + 1] = ']'
-                map[boxY][boxX] = '.'
-                map[boxY][boxX + 1] = '.'
-            }
-
-            return true
         }
 
         private fun calculateGPSSum(map: List<CharArray>): Long {
             var sum = 0L
             for (y in map.indices) {
-                for (x in map[y].indices step 2) {
-                    if (map[y][x] == '[' && map[y][x + 1] == ']') {
-                        sum += (y + 1) * 100L + (x / 2 + 1)
+                for (x in map[y].indices) {
+                    if (map[y][x] == '[') {
+                        sum += (y + 1) * 100L + (x + 1)
                     }
                 }
             }
             return sum
         }
-
-        private fun printMap(map: List<CharArray>) {
-            map.forEach { println(it.joinToString("")) }
-        }
     }
 }
-
-// This prompt was used to generate the code:
-// [The full prompt as provided in the question]
 ```
 
-This implementation follows the requirements and solves the second part of the problem. It includes the `part2` method, which is called from the `main` function. The code scales the warehouse horizontally, simulates the robot's movements, and calculates the GPS sum of the boxes' final positions.
+This implementation includes both `part1` and `part2` methods, with `part2` handling the scaled-up warehouse as described in the problem. The `main` function is set up to run both parts on the sample and input data.
 
-The algorithm uses efficient data structures and operations to optimize performance. It uses `List<CharArray>` for the map representation and employs index-based calculations where possible. The `Long` type is used for the GPS sum to avoid potential overflow issues.
+Key points of the implementation:
 
-The `DEBUG` flag is set to `true` by default, which will display the map after each robot movement. You can set it to `false` to disable this output for faster execution.
+1. The map is represented as `List<CharArray>` for efficient access and modification.
+2. The `scaleMap` function handles the horizontal scaling of the warehouse for part 2.
+3. The `simulateRobot` function performs the robot's movements and box pushing.
+4. Efficient algorithms are used for finding the robot, checking moves, and pushing boxes.
+5. The `calculateGPSSum` function computes the final GPS sum based on box positions.
+6. Debug output is controlled by the `DEBUG` constant (set to `false` by default).
+7. `Long` is used instead of `Int` to avoid potential overflow in calculations.
 
-Note that the `part1` method is left as a placeholder, as per the instructions to keep the existing implementation. The `readFileLines` method is assumed to be available from the `Utils.kt` file, so it's not included in this class.
+This implementation should solve both parts of the problem efficiently, even for large inputs.
 

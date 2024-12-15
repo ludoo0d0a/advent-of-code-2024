@@ -151,23 +151,19 @@ Print the result of part2 to the console.
 EXPECTED_SAMPLE is the expected value for the sample, listed in the problem.
 Now it should be like this : 
 '
-@JvmStatic
-fun main(args: Array<String>) {
-    val sample2 = readFileLines("Day15_star2_sample")
-    val result_sample2 = part1(sample2)
-    println("sample2 result=$result_sample2.") //check final map
+        @JvmStatic
+        fun main(args: Array<String>) {
+            val sample2 = readFileLines("Day15_star2_sample")
+            val result_sample2 = part2(sample2)
+            println("sample2 result=$result_sample2")
 
-    val sample3 = readFileLines("Day15_star1_sample2")
-    val result_sample3 = part2(sample3)
-    println("sample3 result=$result_sample3. Expected=$EXPECTED_SAMPLE") //9021
-
-    val input = readFileLines("Day15_input")
-    //val result_input = part1(input)
-    //println("Result=$result_input")
-
-    val result2_input = part2(input)
-    println("Result2=$result_input")
-}
+//            val input = readFileLines("Day15_input")
+//            val result_input = part1(input)
+//            println("Result=$result_input")
+//
+//            val result2_input = part2(input)
+//            println("Result2=$result2_input")
+        }
 '
 
 Input files consist of 2 section :
@@ -176,11 +172,16 @@ the next lines containing one of the following characters : '>', '<', '^', 'v' r
 
 The new warehouse has to be scaled horizontally before computing.
 
-In the new scaled warehouse, a single box is now represented by 2 characters '[]', that can never be splitted.
-When a robot moves in a direction, all pairs of adjacent '[]', on the same direction, will be moved from 1 unit, unless a box of the group has a wall right after it
-If there is no pairs of adjacent '[]' after the box, on the same direction, the box is just moved from 1 step.
+In the new scaled warehouse, a box is bigger, width is now 2.
+So a single box now is 2 characters '[]', that can never be splitted or replaced.
 
-Display map on each iteration, using a boolean flag constant DEBUG=true.
+When a robot moves, if space is empty, robot goes to the new position.
+When a robot moves left, and space is occupied by ']', the robot will push the box and all adjacent boxes on the left will be moved from 1 unit, if there is some space behind
+When a robot moves right, and reaches a box ']', the robot will push the box and all adjacent boxes on the right will be moved from 1 unit, if there is some space behind
+When a robot moves up, and reaches part of a box, either '[' or ']', the robot will push the whole box (the other character from the pair '[', ']' will be moved with it) and all adjacent boxes (1 box = '[]') above will be moved from 1 unit, if there is some space behind
+When a robot moves down, and reaches part of a box, either '[' or ']', the robot will push the whole box (the other character from the pair '[', ']' will be moved with it) and all adjacent boxes (1 box = '[]') under will be moved from 1 unit, if there is some space behind
+
+Display map on each iteration, using a boolean flag constant DEBUG=false.
 Use map as List<CharArray>
 Optimize the algorithm to be efficient and fast so that solution can be found in a reasonable amount of time.
 Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation. 
