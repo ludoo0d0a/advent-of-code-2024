@@ -2,117 +2,163 @@
 /*
 --- Day 15 star 1 ---
 
-Day 15: Warehouse Woes
+Problem day 15 star 1
 
-This implementation follows the requirements and includes the following optimizations:
+This implementation solves the problem as described. Here's a breakdown of the main components:
 
-1. Uses a 2D array (`Array<CharArray>`) to represent the warehouse for efficient access and modification.
-2. Directly indexes the warehouse array to find the robot and simulate movements.
-3. Uses `Long` for the GPS sum calculation to avoid potential overflow.
-4. Parses the input once and stores the warehouse and moves separately.
-5. Simulates the robot movement in-place, updating the warehouse array directly.
+1. The `part1` function processes the input, separates the map from the moves, and simulates the robot's movement.
+2. The `moveRobot` function handles the robot's movement, including pushing boxes.
+3. The `moveBoxes` function handles the movement of multiple aligned boxes.
+4. The `calculateGPSSum` function calculates the final GPS sum of all boxes.
+5. The `displayMap` function prints the current state of the map after each move.
 
-The `part1` function orchestrates the solution by parsing the input, finding the robot, simulating its movement, and calculating the final GPS sum. The `main` function reads both the sample and actual input files, runs the solution, and prints the results as requested.
+The algorithm is optimized by:
+- Using mutable lists to modify the map in-place.
+- Using character arrays for efficient string manipulation.
+- Handling the movement of multiple aligned boxes in a single operation.
+
+The code uses Long for calculations to avoid potential overflow issues.
+
+Note that this implementation assumes the existence of a `readFileLines` function in a `Utils.kt` file, as mentioned in the problem description. Make sure to include that function or replace it with an appropriate method to read the input files.
 */
 import java.util.*
 
 // kotlin:Day15.kt
-import readFileLines
+import java.util.*
 
 class Day15 {
     companion object {
+        // Prompt: Optimize the algorithm to be efficient and fast so that solution can be found in a reasonable amount of time.
+        // Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation.
+        // Use Long instead of Int to avoid overflow.
+
         private const val EXPECTED_SAMPLE = 2028L
+        private const val EXPECTED_SAMPLE2 = 10092L
 
         @JvmStatic
         fun main(args: Array<String>) {
-            val sample = readFileLines("Day15_star1_sample")
-            val resultSample = part1(sample)
-            expect(resultSample, EXPECTED_SAMPLE)
-            println("Sample result=$resultSample")
+            val sample1 = readFileLines("Day15_star1_sample")
+            val result_sample1 = part1(sample1)
+            expect(result_sample1, EXPECTED_SAMPLE)
+            println("sample result=$result_sample1")
 
-            val input = readFileLines("Day15_input")
-            val resultInput = part1(input)
-            println("Result=$resultInput")
+            val sample2 = readFileLines("Day15_star1_sample2")
+            val result_sample2 = part1(sample2)
+            expect(result_sample2, EXPECTED_SAMPLE2)
+            println("sample2 result=$result_sample1")
+
+//            val input = readFileLines("Day15_input")
+//            val result_input = part1(input)
+//            println("Result=$result_input")
         }
 
         private fun part1(input: List<String>): Long {
-            val (warehouse, moves) = parseInput(input)
-            val robot = findRobot(warehouse)
-            simulateRobotMovement(warehouse, robot, moves)
-            return calculateGPSSum(warehouse)
+            val map = input.takeWhile { it.contains('#') }.toMutableList()
+            val moves = input.last().filter { it in "<>^v" }
+
+            var robotPos = findRobot(map)
+            displayMap(map)
+
+            for (move in moves) {
+                when (move) {
+                    '<' -> moveRobot(map, robotPos, -1, 0)
+                    '>' -> moveRobot(map, robotPos, 1, 0)
+                    '^' -> moveRobot(map, robotPos, 0, -1)
+                    'v' -> moveRobot(map, robotPos, 0, 1)
+                }
+                robotPos = findRobot(map)
+                println("Move $move")
+                displayMap(map)
+            }
+
+            return calculateGPSSum(map)
         }
 
-        private fun parseInput(input: List<String>): Pair<Array<CharArray>, String> {
-            val warehouseLines = input.takeWhile { it.isNotEmpty() }
-            val warehouse = warehouseLines.map { it.toCharArray() }.toTypedArray()
-            val moves = input.last { it.isNotEmpty() }
-            return Pair(warehouse, moves)
-        }
-
-        private fun findRobot(warehouse: Array<CharArray>): Pair<Int, Int> {
-            warehouse.forEachIndexed { y, row ->
-                row.forEachIndexed { x, cell ->
-                    if (cell == '@') return Pair(y, x)
+        private fun findRobot(map: List<String>): Pair<Int, Int> {
+            for (y in map.indices) {
+                for (x in map[y].indices) {
+                    if (map[y][x] == '@') return Pair(x, y)
                 }
             }
-            error("Robot not found")
+            throw IllegalStateException("Robot not found")
         }
 
-        private fun simulateRobotMovement(warehouse: Array<CharArray>, robot: Pair<Int, Int>, moves: String) {
-            var (y, x) = robot
-            moves.forEach { move ->
-                val (dy, dx) = when (move) {
-                    '^' -> -1 to 0
-                    'v' -> 1 to 0
-                    '<' -> 0 to -1
-                    '>' -> 0 to 1
-                    else -> error("Invalid move: $move")
-                }
-                val newY = y + dy
-                val newX = x + dx
+        private fun moveRobot(map: MutableList<String>, robotPos: Pair<Int, Int>, dx: Int, dy: Int) {
+            var (x, y) = robotPos
+            var newX = x + dx
+            var newY = y + dy
 
-                when {
-                    warehouse[newY][newX] == '.' -> {
-                        warehouse[y][x] = '.'
-                        warehouse[newY][newX] = '@'
-                        y = newY
-                        x = newX
-                    }
-                    warehouse[newY][newX] == 'O' -> {
-                        val nextY = newY + dy
-                        val nextX = newX + dx
-                        if (warehouse[nextY][nextX] == '.') {
-                            warehouse[y][x] = '.'
-                            warehouse[newY][newX] = '@'
-                            warehouse[nextY][nextX] = 'O'
-                            y = newY
-                            x = newX
-                        }
-                    }
-                }
+            if (newX < 0 || newX >= map[0].length || newY < 0 || newY >= map.size || map[newY][newX] == '#') {
+                return
             }
+
+            if (map[newY][newX] == 'O') {
+                val boxesMoved = moveBoxes(map, newX, newY, dx, dy)
+                if (boxesMoved == 0) return
+            }
+
+            val row = map[y].toCharArray()
+            row[x] = '.'
+            map[y] = String(row)
+
+            val newRow = map[newY].toCharArray()
+            newRow[newX] = '@'
+            map[newY] = String(newRow)
         }
 
-        private fun calculateGPSSum(warehouse: Array<CharArray>): Long {
+        private fun moveBoxes(map: MutableList<String>, startX: Int, startY: Int, dx: Int, dy: Int): Int {
+            var x = startX
+            var y = startY
+            val boxesToMove = mutableListOf<Pair<Int, Int>>()
+
+            while (x in map[0].indices && y in map.indices && map[y][x] == 'O') {
+                boxesToMove.add(Pair(x, y))
+                x += dx
+                y += dy
+            }
+
+            if (x < 0 || x >= map[0].length || y < 0 || y >= map.size || map[y][x] != '.') {
+                return 0
+            }
+
+            for ((boxX, boxY) in boxesToMove.reversed()) {
+                val newBoxX = boxX + dx
+                val newBoxY = boxY + dy
+
+                val oldRow = map[boxY].toCharArray()
+                oldRow[boxX] = '.'
+                map[boxY] = String(oldRow)
+
+                val newRow = map[newBoxY].toCharArray()
+                newRow[newBoxX] = 'O'
+                map[newBoxY] = String(newRow)
+            }
+
+            return boxesToMove.size
+        }
+
+        private fun calculateGPSSum(map: List<String>): Long {
             var sum = 0L
-            warehouse.forEachIndexed { y, row ->
-                row.forEachIndexed { x, cell ->
-                    if (cell == 'O') {
-                        sum += (y + 1) * 100L + (x + 1)
+            for (y in map.indices) {
+                for (x in map[y].indices) {
+                    if (map[y][x] == 'O') {
+                        sum += (y ) * 100L + (x )
                     }
                 }
             }
             return sum
         }
 
+        private fun displayMap(map: List<String>) {
+            println(map.joinToString("\n"))
+            println()
+        }
+
         private fun expect(actual: Long, expected: Long) {
-            check(actual == expected) { "Expected $expected, but got $actual" }
+            if (actual != expected) {
+                throw AssertionError("Expected $expected, but got $actual")
+            }
         }
     }
 }
-
-// Prompt: Implement a solution for the warehouse robot problem described.
-// The algorithm simulates the robot's movement and calculates the GPS sum of boxes.
-// Optimization: Use 2D array for efficient warehouse representation and direct indexing.
-// Use Long for GPS sum to avoid overflow.
 // end-of-code
