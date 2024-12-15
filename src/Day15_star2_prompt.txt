@@ -155,24 +155,27 @@ Now it should be like this :
 fun main(args: Array<String>) {
     val sample2 = readFileLines("Day15_star2_sample")
     val result_sample2 = part1(sample2)
-    println("sample2 result=$result_sample2")
+    println("sample2 result=$result_sample2. Expected=$EXPECTED_SAMPLE") //9021
     
     val input = readFileLines("Day15_input")
-    val result_input = part1(input)
-    println("Result=$result_input")
-    
+    //val result_input = part1(input)
+    //println("Result=$result_input")
+
     val result2_input = part2(input)
     println("Result2=$result_input")
 }
 '
 
-Input files consist of 2 section : the map on multiple lines containing '#' and the move instructions on multiple lines containing one of the following characters : '>', '<', '^', 'v'
-the 2 sections are separated by an empty line.
-Read all the move instructions from the multiple input lines.
-Consider using the given input map as is, do not compute the scaled warehouse.
-A box is now representing by 2 characters '[]'
+Input files consist of 2 section :
+the first lines containing '#' represents the map,
+the next lines containing one of the following characters : '>', '<', '^', 'v' represents the move instructions.
+
 Walls, represented by '#', can exist inside the map.
-Display map on each iteration
+A single box is now represented by 2 characters '[]'.
+To move horizontally, the 2 characters has to move together.
+To move vertically, the 2 characters has to move together as well, if robot pushed one of the character.
+
+Display map on each iteration.
 
 Optimize the algorithm to be efficient and fast so that solution can be found in a reasonable amount of time.
 Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation. 

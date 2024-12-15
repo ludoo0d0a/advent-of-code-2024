@@ -1,7 +1,7 @@
-Here's the Kotlin class `Day15` with the implementation to solve the problem as described:
+Here's the Kotlin class `Day15` with the implementation to solve the problem as requested:
 
 ```kotlin:Day15.kt
-import java.io.File
+import java.util.*
 
 class Day15 {
     companion object {
@@ -13,133 +13,148 @@ class Day15 {
         fun main(args: Array<String>) {
             val sample2 = readFileLines("Day15_star2_sample")
             val result_sample2 = part2(sample2)
-            println("sample2 result=$result_sample2")
-
+            println("sample2 result=$result_sample2. Expected=9021")
+            
             val input = readFileLines("Day15_input")
+            val result_input = part1(input)
+            println("Result=$result_input")
+            
             val result2_input = part2(input)
             println("Result2=$result2_input")
         }
 
+        fun part1(input: List<String>): Long {
+            val (map, moves) = parseInput(input)
+            return simulateRobot(map, moves)
+        }
+
         fun part2(input: List<String>): Long {
-            val map = input.dropLast(1).toMutableList()
+            val (originalMap, moves) = parseInput(input)
+            val scaledMap = scaleMap(originalMap)
+            return simulateRobot(scaledMap, moves)
+        }
+
+        private fun parseInput(input: List<String>): Pair<List<String>, String> {
+            val mapEndIndex = input.indexOfFirst { it.isEmpty() }
+            val map = input.subList(0, mapEndIndex)
             val moves = input.last()
+            return Pair(map, moves)
+        }
 
-            val robot = findRobot(map)
-            var boxes = findBoxes(map)
+        private fun scaleMap(originalMap: List<String>): List<String> {
+            return originalMap.map { row ->
+                row.map { char ->
+                    when (char) {
+                        '#' -> "##"
+                        'O' -> "[]"
+                        '.' -> ".."
+                        '@' -> "@."
+                        else -> throw IllegalArgumentException("Invalid character: $char")
+                    }
+                }.joinToString("")
+            }
+        }
 
-            displayMap(map)
+        private fun simulateRobot(map: List<String>, moves: String): Long {
+            var currentMap = map.toMutableList()
+            var robotPosition = findRobotPosition(currentMap)
 
             for (move in moves) {
-                when (move) {
-                    '<' -> moveRobot(map, robot, -1, 0, boxes)
-                    '>' -> moveRobot(map, robot, 1, 0, boxes)
-                    '^' -> moveRobot(map, robot, 0, -1, boxes)
-                    'v' -> moveRobot(map, robot, 0, 1, boxes)
+                val newPosition = when (move) {
+                    '>' -> Pair(robotPosition.first, robotPosition.second + 1)
+                    '<' -> Pair(robotPosition.first, robotPosition.second - 1)
+                    '^' -> Pair(robotPosition.first - 1, robotPosition.second)
+                    'v' -> Pair(robotPosition.first + 1, robotPosition.second)
+                    else -> throw IllegalArgumentException("Invalid move: $move")
                 }
-                displayMap(map)
+
+                if (canMove(currentMap, newPosition)) {
+                    currentMap = updateMap(currentMap, robotPosition, newPosition)
+                    robotPosition = newPosition
+                }
+
+                println("After move $move:")
+                currentMap.forEach { println(it) }
+                println()
             }
 
-            return calculateGPSSum(boxes)
+            return calculateGPSSum(currentMap)
         }
 
-        private fun findRobot(map: List<String>): Pair<Int, Int> {
-            for (y in map.indices) {
-                val x = map[y].indexOf('@')
-                if (x != -1) return Pair(x, y)
+        private fun findRobotPosition(map: List<String>): Pair<Int, Int> {
+            for (i in map.indices) {
+                for (j in map[i].indices) {
+                    if (map[i][j] == '@') return Pair(i, j)
+                }
             }
-            throw IllegalStateException("Robot not found")
+            throw IllegalStateException("Robot not found in the map")
         }
 
-        private fun findBoxes(map: List<String>): MutableList<Pair<Int, Int>> {
-            val boxes = mutableListOf<Pair<Int, Int>>()
-            for (y in map.indices) {
-                var x = 0
-                while (x < map[y].length - 1) {
-                    if (map[y].substring(x, x + 2) == "[]") {
-                        boxes.add(Pair(x, y))
-                        x++
+        private fun canMove(map: List<String>, position: Pair<Int, Int>): Boolean {
+            val (row, col) = position
+            if (row < 0 || row >= map.size || col < 0 || col >= map[0].length) return false
+            return map[row][col] != '#'
+        }
+
+        private fun updateMap(map: MutableList<String>, oldPos: Pair<Int, Int>, newPos: Pair<Int, Int>): MutableList<String> {
+            val (oldRow, oldCol) = oldPos
+            val (newRow, newCol) = newPos
+
+            val updatedMap = map.toMutableList()
+
+            // Move robot
+            updatedMap[oldRow] = updatedMap[oldRow].replaceRange(oldCol, oldCol + 1, ".")
+            updatedMap[newRow] = updatedMap[newRow].replaceRange(newCol, newCol + 1, "@")
+
+            // Push boxes
+            if (updatedMap[newRow][newCol] == '[') {
+                val pushDirection = Pair(newRow - oldRow, newCol - oldCol)
+                pushBoxes(updatedMap, newPos, pushDirection)
+            }
+
+            return updatedMap
+        }
+
+        private fun pushBoxes(map: MutableList<String>, startPos: Pair<Int, Int>, direction: Pair<Int, Int>) {
+            var currentPos = startPos
+            while (true) {
+                val nextPos = Pair(currentPos.first + direction.first, currentPos.second + direction.second)
+                if (!canMove(map, nextPos)) break
+
+                if (map[nextPos.first][nextPos.second] == '[') {
+                    currentPos = nextPos
+                } else {
+                    map[nextPos.first] = map[nextPos.first].replaceRange(nextPos.second, nextPos.second + 1, "[")
+                    map[currentPos.first] = map[currentPos.first].replaceRange(currentPos.second, currentPos.second + 1, "]")
+                    break
+                }
+            }
+        }
+
+        private fun calculateGPSSum(map: List<String>): Long {
+            var sum = 0L
+            for (i in map.indices) {
+                for (j in map[i].indices step 2) {
+                    if (map[i][j] == '[') {
+                        sum += (100L * (i + 1)) + ((j / 2) + 1)
                     }
-                    x++
                 }
             }
-            return boxes
-        }
-
-        private fun moveRobot(map: MutableList<String>, robot: Pair<Int, Int>, dx: Int, dy: Int, boxes: MutableList<Pair<Int, Int>>) {
-            val newX = robot.first + dx
-            val newY = robot.second + dy
-
-            if (newX < 0 || newY < 0 || newY >= map.size || newX >= map[newY].length) return
-
-            when {
-                map[newY][newX] == '.' -> {
-                    updateRobotPosition(map, robot, newX, newY)
-                }
-                map[newY][newX] == '[' && newX + 1 < map[newY].length && map[newY][newX + 1] == ']' -> {
-                    val boxIndex = boxes.indexOfFirst { it.first == newX && it.second == newY }
-                    if (boxIndex != -1) {
-                        val newBoxX = newX + dx
-                        val newBoxY = newY + dy
-                        if (canMoveBox(map, newBoxX, newBoxY)) {
-                            moveBox(map, boxes[boxIndex], newBoxX, newBoxY)
-                            boxes[boxIndex] = Pair(newBoxX, newBoxY)
-                            updateRobotPosition(map, robot, newX, newY)
-                        }
-                    }
-                }
-            }
-        }
-
-        private fun canMoveBox(map: List<String>, x: Int, y: Int): Boolean {
-            return y in map.indices && x + 1 < map[y].length && map[y][x] == '.' && map[y][x + 1] == '.'
-        }
-
-        private fun moveBox(map: MutableList<String>, box: Pair<Int, Int>, newX: Int, newY: Int) {
-            val oldRow = map[box.second].toCharArray()
-            oldRow[box.first] = '.'
-            oldRow[box.first + 1] = '.'
-            map[box.second] = String(oldRow)
-
-            val newRow = map[newY].toCharArray()
-            newRow[newX] = '['
-            newRow[newX + 1] = ']'
-            map[newY] = String(newRow)
-        }
-
-        private fun updateRobotPosition(map: MutableList<String>, robot: Pair<Int, Int>, newX: Int, newY: Int) {
-            val oldRow = map[robot.second].toCharArray()
-            oldRow[robot.first] = '.'
-            map[robot.second] = String(oldRow)
-
-            val newRow = map[newY].toCharArray()
-            newRow[newX] = '@'
-            map[newY] = String(newRow)
-        }
-
-        private fun calculateGPSSum(boxes: List<Pair<Int, Int>>): Long {
-            return boxes.sumOf { (x, y) -> (y + 1) * 100L + (x + 1) }
-        }
-
-        private fun displayMap(map: List<String>) {
-            println(map.joinToString("\n"))
-            println()
-        }
-
-        private fun readFileLines(fileName: String): List<String> {
-            return File(fileName).readLines()
+            return sum
         }
     }
 }
 ```
 
-This implementation includes the following optimizations and features:
+This implementation includes both `part1` and `part2` methods, as well as helper functions to parse the input, scale the map, simulate the robot's movements, and calculate the GPS sum. The main method is set up as requested, computing results for both the sample and input data.
 
-1. It uses `Long` for GPS coordinate calculations to avoid overflow.
-2. The `findBoxes` function creates an index of box positions at the start, which is updated during moves.
-3. The `moveRobot` function efficiently handles robot and box movements.
-4. The `calculateGPSSum` function uses efficient summing of coordinates.
-5. The map is displayed after each move for visualization.
-6. The code reads both the sample and input files and processes them accordingly.
+Key optimizations and considerations:
+1. Using `MutableList` for the map to allow in-place updates.
+2. Efficient box pushing algorithm that handles multiple boxes at once.
+3. Using `Long` for GPS coordinate calculations to avoid overflow.
+4. Displaying the map after each move for debugging purposes.
 
-Note that this implementation assumes that the input files "Day15_star2_sample" and "Day15_input" are in the correct format and accessible. Make sure these files are in the correct directory when running the program.
+Note that this solution assumes the existence of a `readFileLines()` function from `Utils.kt` to read the input files. Make sure this function is available in your project.
+
+The algorithm should be reasonably efficient, but depending on the size and complexity of the input, it may still take some time to compute the result. Further optimizations could be made if needed, such as using a more efficient data structure for the map or implementing a smarter box-pushing algorithm.
 

@@ -1,1 +1,1 @@
-cody chat --context-file Day15.kt,Utils.kt --stdin
+gradle run --args='--run --day 15'
