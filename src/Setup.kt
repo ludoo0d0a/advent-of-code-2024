@@ -66,6 +66,7 @@ fun main(args: Array<String>) {
             """
 The first part of the problem is solved, now consider the second part of the problem, 
 Another method named 'part2', called from main() method, solves this second part of the problem.
+Keep the implementation of 'part1' from current class 'Day$dayPad'.
 Compute the result for the sample named 'Day${dayPad}_star2_sample' and for the input, named 'Day${dayPad}_input'.
 Print the result of part2 to the console.
 EXPECTED_SAMPLE is the expected value for the sample, listed in the problem.
@@ -100,8 +101,11 @@ $prompt_star
 Use readFileLines() method from Utils.kt to read the content of the input file.
 Do not add a method readFileLines().
 
+Display map on each iteration, using a boolean flag constant DEBUG (by default =true).
+Use map as List<CharArray>
 Optimize the algorithm to be efficient and fast so that solution can be found in a reasonable amount of time. 
 Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation. 
+Use map as List<CharArray>.
 use Long instead of Int to avoid overflow.
 Add this prompt in comment in the code.
 Show the whole code for the kotlin class.
@@ -203,7 +207,10 @@ Show the whole code for the kotlin class.
             totals.getOrNull(star - 1) ?: throw Exception("Total not found for star $star in totals $totals")
 
         if (!isNumeric(total))
-            throw Exception("Total is not numeric: $total")
+            throw Exception("ERROR : Total is not numeric: $total")
+
+        if (total.toInt()<1)
+            throw Exception("RROR : Total is negative or null: $total")
 
         if (!submitAnswer) {
             println("Will NOT submit answer for day:$dayPad, star:$star = $total")
@@ -429,21 +436,30 @@ $code
                 it.flush()
             }
         }
-        val error = p.errorStream.bufferedReader().readText()
-        val output = p.inputStream.bufferedReader().readText()
+        // Create buffered readers for output and error streams
+        val outputReader = p.inputStream.bufferedReader()
+        val errorReader = p.errorStream.bufferedReader()
+
+        // Collect output using StringBuilder
+        val output = StringBuilder()
+        val error = StringBuilder()
+
+        // Read streams line by line as they become available
+        while (p.isAlive || outputReader.ready() || errorReader.ready()) {
+            if (outputReader.ready()) {
+                val line = outputReader.readLine()
+                println("output >>>>> $line")
+                output.appendLine(line)
+            }
+            if (errorReader.ready()) {
+                val line = errorReader.readLine()
+                println("ERROR >>>>> $line")
+                error.appendLine(line)
+            }
+        }
         println("...waiting...")
         p.waitFor()
-
-        println("-- Command output >>>>>")
-        println(output)
-        println("<<<<< Command output")
-        if (error.isNotBlank()) {
-            println("-- Command error >>>>>")
-            println(error)
-            println("<<<<< Command error")
-        }
-
-        return ShellResponse(0,output, error)
+        return ShellResponse(p.exitValue(), output.toString(), error.toString())
     }
 
     fun buildRunProgram(): String {
