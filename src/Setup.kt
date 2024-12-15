@@ -44,15 +44,47 @@ class Setup {
         val prompt_star = if (star==1){
             """
 A first method named 'part1', called from main() method, solves this first part of the problem.
-Use readFileLines() method from Utils.kt to read the content of the input file, named 'Day${dayPad}_input'.
-Print the result of part1 to the console using the following format : "Result1=XX" where XX is the result value. 
+Compute the result for the sample named 'Day${dayPad}_star1_sample' and for the input, named 'Day${dayPad}_input'.
+Print the result of part1 to the console.
+EXPECTED_SAMPLE is the expected value for the sample, listed in the problem.
+It should be like this : 
+'
+@JvmStatic
+fun main(args: Array<String>) {
+    val sample1 = readFileLines("Day15_star1_sample")
+    val result_sample1 = part1(sample1)
+    expect(result_sample1, EXPECTED_SAMPLE)
+    println("sample result=${'$'}result_sample1")
+    
+    val input = readFileLines("Day15_input")
+    val result_input = part1(input)
+    println("Result=${'$'}result_input")
+}
+'
             """
         }else {
             """
 The first part of the problem is solved, now consider the second part of the problem, 
 Another method named 'part2', called from main() method, solves this second part of the problem.
-Use already provided readFileLines() method from Utils.kt to read the content of the input file, named 'Day${dayPad}_input'.
-Print the result of part2 to the console using the following format : "Result2=XX" where XX is the result value. 
+Compute the result for the sample named 'Day${dayPad}_star2_sample' and for the input, named 'Day${dayPad}_input'.
+Print the result of part2 to the console.
+EXPECTED_SAMPLE is the expected value for the sample, listed in the problem.
+Now it should be like this : 
+'
+@JvmStatic
+fun main(args: Array<String>) {
+    val sample2 = readFileLines("Day15_star2_sample")
+    val result_sample2 = part2(sample2)
+    println("sample2 result=${'$'}result_sample2")
+    
+    val input = readFileLines("Day15_input")
+    val result_input = part1(input)
+    println("Result=${'$'}result_input")
+    
+    val result2_input = part2(input)
+    println("Result2=${'$'}result_input")
+}
+' 
             """
         }
 
@@ -64,7 +96,11 @@ ${content}
 then please write a Kotlin class named Day${dayPad}, with a main function, to solve this problem. 
 the main method should compute : 
 $prompt_star
-Optimize the algorithm to be be efficient and fast so that solution can be found in a reasonable amount of time. 
+
+Use readFileLines() method from Utils.kt to read the content of the input file.
+Do not add a method readFileLines().
+
+Optimize the algorithm to be efficient and fast so that solution can be found in a reasonable amount of time. 
 Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation. 
 use Long instead of Int to avoid overflow.
 Add this prompt in comment in the code.
