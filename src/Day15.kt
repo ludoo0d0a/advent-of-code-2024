@@ -1,6 +1,6 @@
 class Day15 {
     companion object {
-        const val DEBUG = true
+        const val DEBUG = false
 
         @JvmStatic
         fun main(args: Array<String>) {
@@ -12,9 +12,9 @@ class Day15 {
             val result_sample2 = part2(sample2)
             println("sample2 result=$result_sample2 expected 9021 ?")
 
-//            val input = readFileLines("Day15_input")
-//            val result2_input = part2(input)
-//            println("Result2=$result2_input")
+            val input = readFileLines("Day15_input")
+            val result2_input = part2(input)
+            println("Result2=$result2_input") //1413011 ko
         }
 
         fun part1(input: List<String>): Long {
@@ -219,9 +219,12 @@ class Day15 {
 
         fun calculateGPSSum(): Long {
             return boxes.sumOf { box ->
-                val closestX = minOf(box.leftPosition.x, box.rightPosition.x)
-                val y = box.leftPosition.y  // y is same for both edges
-                100L * (y ) + closestX
+//                //val closestX = minOf(box.leftPosition.x, box.rightPosition.x)
+//                val closestX = box.leftPosition.x
+//                val y = box.leftPosition.y  // y is same for both edges
+//                100L * y + closestX
+
+                100L * box.leftPosition.y + box.leftPosition.x
             }
         }
 
