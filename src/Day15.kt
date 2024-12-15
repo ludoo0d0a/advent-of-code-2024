@@ -4,9 +4,17 @@ class Day15 {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            val sample2 = readFileLines("Day15_star2_sample")
+//            val sample2 = readFileLines("Day15_star2_sample")
+//            val result_sample2 = part2(sample2)
+//            println("sample2 result=$result_sample2")
+
+            val sample2 = readFileLines("Day15_star1_sample2")
             val result_sample2 = part2(sample2)
-            println("sample2 result=$result_sample2")
+            println("sample2 result=$result_sample2 expected 9021 ?")
+
+//            val input = readFileLines("Day15_input")
+//            val result2_input = part2(input)
+//            println("Result2=$result2_input")
         }
 
         fun part1(input: List<String>): Long {
@@ -39,7 +47,12 @@ class Day15 {
         }
 
         private fun parseInput(input: List<String>) =
-            Pair(input.takeWhile { it.isNotEmpty() }, input.last().toList())
+            Pair(
+                input.takeWhile { it.isNotEmpty() },
+                input.dropWhile { it.isNotEmpty() }
+                    .drop(1)  // Skip the empty line
+                    .flatMap { it.toList() }
+            )
 
         private fun scaleMap(map: List<String>) = map.map { line ->
             line.map { char ->
