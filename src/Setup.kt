@@ -213,7 +213,7 @@ Show the whole code for the kotlin class.
             throw Exception("RROR : Total is negative or null: $total")
 
         if (!submitAnswer) {
-            println("Will NOT submit answer for day:$dayPad, star:$star = $total")
+            println("Submission disabled : Answer will NOT submitted for day:$dayPad, star:$star = $total")
             return false
         }
 
@@ -223,6 +223,9 @@ Show the whole code for the kotlin class.
     }
 
     private fun submitSolution(total: String): Boolean {
+
+        appendFile("Day${dayPad}_star${star}_submissions.answer", total)
+
         val postUrl = "https://adventofcode.com/2024/day/$day/answer"
         val submissionResult = runBlocking {
                 httpForm(postUrl, total, day, star)
@@ -290,6 +293,9 @@ Show the whole code for the kotlin class.
 
     private fun writeFile(filename: String, content: String) {
         File("${path}${filename}").writeText(content)
+    }
+    private fun appendFile(filename: String, content: String) {
+        File("${path}${filename}").appendText(content+"\n")
     }
     private fun readFile(filename: String): String {
         return File("${path}${filename}").readText()
