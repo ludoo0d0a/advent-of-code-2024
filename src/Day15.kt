@@ -219,7 +219,9 @@ class Day15 {
 
         fun calculateGPSSum(): Long {
             return boxes.sumOf { box ->
-                100L * (box.leftPosition.y + 1) + (box.leftPosition.x + 1)
+                val closestX = minOf(box.leftPosition.x, box.rightPosition.x)
+                val y = box.leftPosition.y  // y is same for both edges
+                100L * (y ) + closestX
             }
         }
 
