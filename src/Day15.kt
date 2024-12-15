@@ -68,12 +68,12 @@ class Day15 {
 
         fun isAdjacent(other: Box, direction: Position): Boolean {
             return when {
-                direction.x > 0 -> this.rightPosition.x + 1 == other.leftPosition.x
-                direction.x < 0 -> this.leftPosition.x - 1 == other.rightPosition.x
-                direction.y > 0 -> this.rightPosition.y + 1 == other.leftPosition.y
-                direction.y < 0 -> this.leftPosition.y - 1 == other.rightPosition.y
+                direction.x > 0 -> this.rightPosition.x + 1 == other.leftPosition.x && this.leftPosition.x == other.leftPosition.x
+                direction.x < 0 -> this.leftPosition.x - 1 == other.rightPosition.x && this.leftPosition.y == other.leftPosition.y
+                direction.y > 0 -> Math.abs(this.leftPosition.x - other.leftPosition.x)<=1 && this.leftPosition.y + 1 == other.leftPosition.y
+                direction.y < 0 -> Math.abs(this.leftPosition.x - other.leftPosition.x)<=1 && this.leftPosition.y - 1 == other.leftPosition.y
                 else -> false
-            } && this.leftPosition.x == other.leftPosition.x || this.leftPosition.y == other.leftPosition.y
+            }
         }
     }
     data class Robot(var position: Position)
@@ -125,22 +125,7 @@ class Day15 {
             val firstBox = boxes.find { it.leftPosition == startPosition || it.rightPosition == startPosition }
                 ?: return
 
-            val boxesToMove = mutableListOf(firstBox)
-            var lastBoxes = listOf(firstBox)
-
-            while (true) {
-                val nextBoxes = boxes.filter { box ->
-                     lastBoxes.all { lastBox ->
-                         lastBox.isAdjacent(box, movement)
-                     }
-                 }
-                lastBoxes = nextBoxes.filter { nextBox ->
-                    !boxesToMove.contains(nextBox)
-                }
-                if (lastBoxes.isEmpty())
-                    break;
-                boxesToMove.addAll(lastBoxes)
-            }
+            val boxesToMove = findAdjacentBoxes(firstBox, movement)
 
             if (canMoveAllTo(movement, boxesToMove)) {
                 boxesToMove.reversed().forEach { it.move(movement) }
@@ -148,7 +133,28 @@ class Day15 {
             }
         }
 
-        private fun canMoveAllTo(movement: Position, boxesToMove: MutableList<Box>): Boolean {
+        private fun findAdjacentBoxes(firstBox: Box, movement: Position): List<Box> {
+            val boxChain = mutableSetOf(firstBox)
+            var currentBoxes = setOf(firstBox)
+
+            while (true) {
+                val nextBoxes = currentBoxes.flatMap { box ->
+                    boxes.filter { other ->
+                        other !in boxChain && box.isAdjacent(other, movement)
+                    }
+                }.toSet()
+
+                if (nextBoxes.isEmpty()) break
+
+                boxChain.addAll(nextBoxes)
+                currentBoxes = nextBoxes
+            }
+
+            return boxChain.toList()
+        }
+
+
+        private fun canMoveAllTo(movement: Position, boxesToMove: List<Box>): Boolean {
             val lastBoxes = findLastBoxes(boxesToMove, movement)
 
             if (movement.x > 0)
@@ -162,7 +168,7 @@ class Day15 {
             else
                 return false
         }
-        private fun findLastBoxes(boxes: MutableList<Box>, movement: Position) : List<Box>{
+        private fun findLastBoxes(boxes: List<Box>, movement: Position) : List<Box>{
             return boxes.filter { box ->
                 val positionToCheck = if (movement.x > 0) {
                     box.rightPosition + movement
