@@ -1,0 +1,145 @@
+Here's the Kotlin class `Day15` with the implementation to solve the problem as described:
+
+```kotlin:Day15.kt
+import java.io.File
+
+class Day15 {
+    companion object {
+        // Prompt: Optimize the algorithm to be efficient and fast so that solution can be found in a reasonable amount of time.
+        // Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation.
+        // Use Long instead of Int to avoid overflow.
+
+        @JvmStatic
+        fun main(args: Array<String>) {
+            val sample2 = readFileLines("Day15_star2_sample")
+            val result_sample2 = part2(sample2)
+            println("sample2 result=$result_sample2")
+
+            val input = readFileLines("Day15_input")
+            val result2_input = part2(input)
+            println("Result2=$result2_input")
+        }
+
+        fun part2(input: List<String>): Long {
+            val map = input.dropLast(1).toMutableList()
+            val moves = input.last()
+
+            val robot = findRobot(map)
+            var boxes = findBoxes(map)
+
+            displayMap(map)
+
+            for (move in moves) {
+                when (move) {
+                    '<' -> moveRobot(map, robot, -1, 0, boxes)
+                    '>' -> moveRobot(map, robot, 1, 0, boxes)
+                    '^' -> moveRobot(map, robot, 0, -1, boxes)
+                    'v' -> moveRobot(map, robot, 0, 1, boxes)
+                }
+                displayMap(map)
+            }
+
+            return calculateGPSSum(boxes)
+        }
+
+        private fun findRobot(map: List<String>): Pair<Int, Int> {
+            for (y in map.indices) {
+                val x = map[y].indexOf('@')
+                if (x != -1) return Pair(x, y)
+            }
+            throw IllegalStateException("Robot not found")
+        }
+
+        private fun findBoxes(map: List<String>): MutableList<Pair<Int, Int>> {
+            val boxes = mutableListOf<Pair<Int, Int>>()
+            for (y in map.indices) {
+                var x = 0
+                while (x < map[y].length - 1) {
+                    if (map[y].substring(x, x + 2) == "[]") {
+                        boxes.add(Pair(x, y))
+                        x++
+                    }
+                    x++
+                }
+            }
+            return boxes
+        }
+
+        private fun moveRobot(map: MutableList<String>, robot: Pair<Int, Int>, dx: Int, dy: Int, boxes: MutableList<Pair<Int, Int>>) {
+            val newX = robot.first + dx
+            val newY = robot.second + dy
+
+            if (newX < 0 || newY < 0 || newY >= map.size || newX >= map[newY].length) return
+
+            when {
+                map[newY][newX] == '.' -> {
+                    updateRobotPosition(map, robot, newX, newY)
+                }
+                map[newY][newX] == '[' && newX + 1 < map[newY].length && map[newY][newX + 1] == ']' -> {
+                    val boxIndex = boxes.indexOfFirst { it.first == newX && it.second == newY }
+                    if (boxIndex != -1) {
+                        val newBoxX = newX + dx
+                        val newBoxY = newY + dy
+                        if (canMoveBox(map, newBoxX, newBoxY)) {
+                            moveBox(map, boxes[boxIndex], newBoxX, newBoxY)
+                            boxes[boxIndex] = Pair(newBoxX, newBoxY)
+                            updateRobotPosition(map, robot, newX, newY)
+                        }
+                    }
+                }
+            }
+        }
+
+        private fun canMoveBox(map: List<String>, x: Int, y: Int): Boolean {
+            return y in map.indices && x + 1 < map[y].length && map[y][x] == '.' && map[y][x + 1] == '.'
+        }
+
+        private fun moveBox(map: MutableList<String>, box: Pair<Int, Int>, newX: Int, newY: Int) {
+            val oldRow = map[box.second].toCharArray()
+            oldRow[box.first] = '.'
+            oldRow[box.first + 1] = '.'
+            map[box.second] = String(oldRow)
+
+            val newRow = map[newY].toCharArray()
+            newRow[newX] = '['
+            newRow[newX + 1] = ']'
+            map[newY] = String(newRow)
+        }
+
+        private fun updateRobotPosition(map: MutableList<String>, robot: Pair<Int, Int>, newX: Int, newY: Int) {
+            val oldRow = map[robot.second].toCharArray()
+            oldRow[robot.first] = '.'
+            map[robot.second] = String(oldRow)
+
+            val newRow = map[newY].toCharArray()
+            newRow[newX] = '@'
+            map[newY] = String(newRow)
+        }
+
+        private fun calculateGPSSum(boxes: List<Pair<Int, Int>>): Long {
+            return boxes.sumOf { (x, y) -> (y + 1) * 100L + (x + 1) }
+        }
+
+        private fun displayMap(map: List<String>) {
+            println(map.joinToString("\n"))
+            println()
+        }
+
+        private fun readFileLines(fileName: String): List<String> {
+            return File(fileName).readLines()
+        }
+    }
+}
+```
+
+This implementation includes the following optimizations and features:
+
+1. It uses `Long` for GPS coordinate calculations to avoid overflow.
+2. The `findBoxes` function creates an index of box positions at the start, which is updated during moves.
+3. The `moveRobot` function efficiently handles robot and box movements.
+4. The `calculateGPSSum` function uses efficient summing of coordinates.
+5. The map is displayed after each move for visualization.
+6. The code reads both the sample and input files and processes them accordingly.
+
+Note that this implementation assumes that the input files "Day15_star2_sample" and "Day15_input" are in the correct format and accessible. Make sure these files are in the correct directory when running the program.
+
