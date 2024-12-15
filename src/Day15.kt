@@ -42,24 +42,31 @@ class Day15 {
             expect(result_sample1, EXPECTED_SAMPLE)
             println("sample result=$result_sample1")
 
+            println("----- ")
+            println("----- ")
+
             val sample2 = readFileLines("Day15_star1_sample2")
             val result_sample2 = part1(sample2)
             expect(result_sample2, EXPECTED_SAMPLE2)
             println("sample2 result=$result_sample1")
 
-//            val input = readFileLines("Day15_input")
-//            val result_input = part1(input)
-//            println("Result=$result_input")
+            println("----- ")
+            println("----- ")
+
+            val input = readFileLines("Day15_input")
+            val result_input = part1(input)
+            println("Result=$result_input")
         }
 
         private fun part1(input: List<String>): Long {
             val map = input.takeWhile { it.contains('#') }.toMutableList()
-            val moves = input.last().filter { it in "<>^v" }
+            val moves = input.dropWhile { it.contains('#') }.joinToString("").filter { it in "<>^v" }
 
             var robotPos = findRobot(map)
             displayMap(map)
-
+            var i = 0
             for (move in moves) {
+                ++i
                 when (move) {
                     '<' -> moveRobot(map, robotPos, -1, 0)
                     '>' -> moveRobot(map, robotPos, 1, 0)
@@ -67,7 +74,7 @@ class Day15 {
                     'v' -> moveRobot(map, robotPos, 0, 1)
                 }
                 robotPos = findRobot(map)
-                println("Move $move")
+                println("$i - Move $move")
                 displayMap(map)
             }
 

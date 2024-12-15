@@ -237,3 +237,4 @@ Show the whole code for the kotlin class.
 display the map on each iteration.
 A robot can push several aligned boxes in one move.
 To be pushed, it just need at least one space after all adjacent and aligned box on the same line.
+list of moves instructions can be on several lines
