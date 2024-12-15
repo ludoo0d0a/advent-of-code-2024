@@ -19,6 +19,7 @@ class Day15 {
 
         fun part1(input: List<String>): Long {
             val (map, moves) = parseInput(input)
+            println("${moves.size} moves ")
             val warehouse = Warehouse(map)
             moves.forEachIndexed{ i, move ->
                 warehouse.moveRobot(move, i)
@@ -32,6 +33,7 @@ class Day15 {
 
         fun part2(input: List<String>): Long {
             val (map, moves) = parseInput(input)
+            println("${moves.size} moves ")
             val scaledMap = scaleMap(map)
             val warehouse = Warehouse(scaledMap)
             if (DEBUG)
@@ -77,7 +79,7 @@ class Day15 {
 
         fun isAdjacent(other: Box, direction: Position): Boolean {
             return when {
-                direction.x > 0 -> this.rightPosition.x + 1 == other.leftPosition.x && this.leftPosition.x == other.leftPosition.x
+                direction.x > 0 -> this.rightPosition.x + 1 == other.leftPosition.x && this.leftPosition.y == other.leftPosition.y
                 direction.x < 0 -> this.leftPosition.x - 1 == other.rightPosition.x && this.leftPosition.y == other.leftPosition.y
                 direction.y > 0 -> Math.abs(this.leftPosition.x - other.leftPosition.x)<=1 && this.leftPosition.y + 1 == other.leftPosition.y
                 direction.y < 0 -> Math.abs(this.leftPosition.x - other.leftPosition.x)<=1 && this.leftPosition.y - 1 == other.leftPosition.y
@@ -127,8 +129,8 @@ class Day15 {
                 }
                 isBoxAt(newPosition) -> {
                     val boxesToMove = findAdjacentBoxes(boxes.first { it.leftPosition == newPosition || it.rightPosition == newPosition }, movement)
-                    if (DEBUG) printMap(boxesToMove, direction, i)
                     pushBoxes(newPosition, movement)
+                    if (DEBUG) printMap(boxesToMove, direction, i)
                 }
             }
         }
@@ -151,11 +153,12 @@ class Day15 {
             var currentBoxes = setOf(firstBox)
 
             while (true) {
-                val nextBoxes = currentBoxes.flatMap { box ->
+                val nextBoxes = currentBoxes.flatMap { currentBox ->
                     boxes.filter { other ->
-                        other !in boxChain && box.isAdjacent(other, movement)
+                        other !in boxChain && currentBox.isAdjacent(other, movement)
                     }
                 }.toSet()
+
 
                 if (nextBoxes.isEmpty()) break
 
@@ -174,9 +177,7 @@ class Day15 {
                 return lastBoxes.all{ box -> canMoveTo(box.rightPosition + movement) }
             else if (movement.x < 0)
                 return lastBoxes.all{ box -> canMoveTo(box.leftPosition + movement) }
-            else if  (movement.y > 0)
-                return lastBoxes.all{ box -> canMoveTo(box.leftPosition + movement) && canMoveTo(box.rightPosition + movement)}
-            else if  (movement.y < 0)
+            else if  (movement.y != 0)
                 return lastBoxes.all{ box -> canMoveTo(box.leftPosition + movement) && canMoveTo(box.rightPosition + movement)}
             else
                 return false
@@ -223,11 +224,15 @@ class Day15 {
         }
 
         fun printMap(boxesToHighlight: List<Box> = emptyList(), direction: Char = '@', i: Int=0) {
+            if (boxesToHighlight.size<1)
+                return
+
             val RESET = "\u001B[0m"
             val RED = "\u001B[31m"
             val GREEN = "\u001B[32m"
             val YELLOW = "\u001B[33m"
             val BLUE = "\u001B[34m"
+
 
             println("Map @$i")
 
