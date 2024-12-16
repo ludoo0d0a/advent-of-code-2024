@@ -2,115 +2,197 @@ import java.util.*
 
 class Day16 {
     companion object {
-        private const val DEBUG = true
+        private const val DEBUG = false
         private const val EXPECTED_SAMPLE = 7036L
 
-        data class State(val row: Int, val col: Int, val direction: Int, val score: Long)
-        data class Node(val state: State, val priority: Long): Comparable<Node> {
-            override fun compareTo(other: Node) = priority.compareTo(other.priority)
-        }
+        private const val ANSI_RED = "\u001B[31m"
+        private const val ANSI_GREEN = "\u001B[32m"
+        private const val ANSI_YELLOW = "\u001B[33m"
+        private const val ANSI_BLUE = "\u001B[34m"
+        private const val ANSI_RESET = "\u001B[0m"
+
+        data class Position(
+            val row: Int,
+            val col: Int,
+            val direction: Int,
+            val score: Long,
+            val path: List<Triple<Int, Int, Int>> = listOf()
+        )
 
         @JvmStatic
         fun main(args: Array<String>) {
             val sample1 = readFileLines("Day16_star1_sample")
             val result_sample1 = part1(sample1)
             expect(result_sample1, EXPECTED_SAMPLE)
-            println("sample result=$result_sample1")
+            println("Sample result=$result_sample1")
 
-//            val input = readFileLines("Day16_input")
-//            val result_input = part1(input)
-//            println("Result=$result_input")
+            val input = readFileLines("Day16_input")
+            val result_input = part1(input)
+            println("Result=$result_input")
         }
 
         private fun part1(input: List<String>): Long {
             val map = input.map { it.toCharArray() }.toList()
-            val start = findStart(map)
-            val end = findEnd(map)
-            return findShortestPath(map, start, end)
+            return solveMaze(map)
         }
 
-        private fun findShortestPath(map: List<CharArray>, start: Pair<Int, Int>, end: Pair<Int, Int>): Long {
-            val directions = arrayOf(-1 to 0, 0 to 1, 1 to 0, 0 to -1)
-            val visited = mutableSetOf<Triple<Int, Int, Int>>()
-            val queue = PriorityQueue<Node>()
+        private fun solveMaze(map: List<CharArray>): Long {
+            val start = findStart(map)
+            val end = findEnd(map)
+            val directions = arrayOf(-1 to 0, 0 to 1, 1 to 0, 0 to -1) // N,E,S,W
 
-            // Start with all possible initial directions
-            for (dir in 0..3) {
-                queue.offer(Node(State(start.first, start.second, dir, 0), 0))
-            }
+            val queue = PriorityQueue<Position>(compareBy { it.score })
+            val visited = mutableSetOf<Triple<Int, Int, Int>>()
+
+            // Start facing East (1) with no rotation cost
+            queue.offer(Position(start.first, start.second, 1, 0))
+            // Other initial directions require rotation cost
+            queue.offer(Position(start.first, start.second, 0, 1000)) // North
+            queue.offer(Position(start.first, start.second, 2, 1000)) // South
+            queue.offer(Position(start.first, start.second, 3, 1000)) // West
+
+            var bestSolution: Position? = null
 
             while (queue.isNotEmpty()) {
-                val current = queue.poll().state
-                val key = Triple(current.row, current.col, current.direction)
+                val current = queue.poll()
+                val state = Triple(current.row, current.col, current.direction)
 
                 if (current.row == end.first && current.col == end.second) {
-                    return current.score
+                    if (bestSolution == null || current.score < bestSolution.score) {
+                        bestSolution = current
+                        if (DEBUG) {
+                            println("Found better solution with score: ${current.score}")
+                            displaySolutionPath(map, current.path)
+                        }
+                    }
+                    continue
                 }
 
-                if (key in visited) continue
-                visited.add(key)
+                if (state in visited) continue
+                visited.add(state)
 
                 if (DEBUG) {
-                    displayMap(map, current.row, current.col)
+                    displayMap(map, current.row, current.col, current.direction)
+                    Thread.sleep(100) // Slow down visualization
                 }
 
-                // Forward movement
+                // Move forward
                 val (dr, dc) = directions[current.direction]
-                val newRow = current.row + dr
-                val newCol = current.col + dc
-                if (isValid(map, newRow, newCol)) {
-                    queue.offer(Node(
-                        State(newRow, newCol, current.direction, current.score + 1),
-                        current.score + 1 + manhattanDistance(newRow, newCol, end)
+                val nextRow = current.row + dr
+                val nextCol = current.col + dc
+                if (isValidMove(map, nextRow, nextCol)) {
+                    queue.offer(Position(
+                        nextRow,
+                        nextCol,
+                        current.direction,
+                        current.score + 1,
+                        current.path + Triple(nextRow, nextCol, current.direction)
                     ))
                 }
 
                 // Rotations
-                val rotations = arrayOf(
+                val rotations = listOf(
                     (current.direction + 1) % 4,  // clockwise
-                    (current.direction + 3) % 4   // counter-clockwise
+                    (current.direction + 3) % 4   // counterclockwise
                 )
 
-                for (newDir in rotations) {
-                    queue.offer(Node(
-                        State(current.row, current.col, newDir, current.score + 1000),
-                        current.score + 1000 + manhattanDistance(current.row, current.col, end)
+                rotations.forEach { newDir ->
+                    queue.offer(Position(
+                        current.row,
+                        current.col,
+                        newDir,
+                        current.score + 1000,
+                        current.path + Triple(current.row, current.col, newDir)
                     ))
                 }
             }
 
-            return Long.MAX_VALUE
+            return bestSolution?.score ?: Long.MAX_VALUE
         }
 
-        private fun manhattanDistance(row: Int, col: Int, end: Pair<Int, Int>): Long {
-            return (Math.abs(row - end.first) + Math.abs(col - end.second)).toLong()
-        }
+        private fun displayMap(map: List<CharArray>, currentRow: Int, currentCol: Int, direction: Int) {
+            val directionSymbol = when(direction) {
+                0 -> "^"
+                1 -> ">"
+                2 -> "v"
+                3 -> "<"
+                else -> "+"
+            }
 
-        private fun isValid(map: List<CharArray>, row: Int, col: Int): Boolean {
-            return row in map.indices && col in map[0].indices && map[row][col] != '#'
-        }
-
-        // Existing helper functions remain the same
-        private fun findStart(map: List<CharArray>) = map.indices.firstNotNullOf { i ->
-            map[i].indices.firstOrNull { j -> map[i][j] == 'S' }?.let { j -> i to j }
-        }
-
-        private fun findEnd(map: List<CharArray>) = map.indices.firstNotNullOf { i ->
-            map[i].indices.firstOrNull { j -> map[i][j] == 'E' }?.let { j -> i to j }
-        }
-
-        private fun displayMap(map: List<CharArray>, currentRow: Int, currentCol: Int) {
             for (i in map.indices) {
-                for (j in map[i].indices) {
-                    print(if (i == currentRow && j == currentCol) '*' else map[i][j])
+                for (j in map[0].indices) {
+                    when {
+                        i == currentRow && j == currentCol ->
+                            print("$ANSI_BLUE$directionSymbol$ANSI_RESET")
+                        map[i][j] == 'S' ->
+                            print("${ANSI_GREEN}S$ANSI_RESET")
+                        map[i][j] == 'E' ->
+                            print("${ANSI_RED}E$ANSI_RESET")
+                        map[i][j] == '#' ->
+                            print("${ANSI_YELLOW}#$ANSI_RESET")
+                        else -> print(map[i][j])
+                    }
                 }
                 println("")
             }
             println("")
         }
 
+        private fun displaySolutionPath(map: List<CharArray>, path: List<Triple<Int, Int, Int>>) {
+            println("\nFinal solution path:")
+            for (i in map.indices) {
+                for (j in map[0].indices) {
+                    val position = path.find { (r, c, _) -> r == i && c == j }
+                    when {
+                        position != null -> {
+                            val symbol = when(position.third) {
+                                0 -> "^"
+                                1 -> ">"
+                                2 -> "v"
+                                3 -> "<"
+                                else -> "+"
+                            }
+                            print("$ANSI_BLUE$symbol$ANSI_RESET")
+                        }
+                        map[i][j] == 'S' -> print("${ANSI_GREEN}S$ANSI_RESET")
+                        map[i][j] == 'E' -> print("${ANSI_RED}E$ANSI_RESET")
+                        map[i][j] == '#' -> print("${ANSI_YELLOW}#$ANSI_RESET")
+                        else -> print('.')
+                    }
+                }
+                println("")
+            }
+            println("\nPath length: ${path.size}")
+        }
+
+        private fun isValidMove(map: List<CharArray>, row: Int, col: Int): Boolean {
+            return row in map.indices &&
+                    col in map[0].indices &&
+                    map[row][col] != '#'
+        }
+
+        private fun findStart(map: List<CharArray>): Pair<Int, Int> {
+            for (i in map.indices) {
+                for (j in map[0].indices) {
+                    if (map[i][j] == 'S') return i to j
+                }
+            }
+            throw IllegalStateException("Start position not found")
+        }
+
+        private fun findEnd(map: List<CharArray>): Pair<Int, Int> {
+            for (i in map.indices) {
+                for (j in map[0].indices) {
+                    if (map[i][j] == 'E') return i to j
+                }
+            }
+            throw IllegalStateException("End position not found")
+        }
+
         private fun expect(actual: Long, expected: Long) {
-            if (actual != expected) throw AssertionError("Expected $expected but got $actual")
+            if (actual != expected) {
+                throw AssertionError("Expected $expected but got $actual")
+            }
         }
     }
 }
