@@ -256,16 +256,16 @@ class Day15 {
             display.forEach { line ->
                 println(line.joinToString("") { char ->
                     when (char) {
-                        '#' -> "$YELLOW#$RESET"
-                        '@' -> "$RED@$RESET"
+                        '#' -> "$YELLOW█$RESET"
+                        '@' -> "$RED$char$RESET"
                         direction -> "$RED$direction$RESET"
-                        '[', ']' -> "$GREEN$char$RESET"
-                        '(', ')' -> "$BLUE$char$BLUE"
+                        '[', ']' -> "$GREEN█$RESET"
+                        '(', ')' -> "$BLUE█$BLUE"
                         else -> char.toString()
                     }
                 })
             }
-            println()
+            println("")
         }
 
     }
