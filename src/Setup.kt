@@ -101,8 +101,7 @@ $prompt_star
 Use readFileLines() method from Utils.kt to read the content of the input file.
 Do not add a method readFileLines().
 
-Display map on each iteration, using a boolean flag constant DEBUG (by default =true).
-Use map as List<CharArray>
+Display map on each iteration, using ansi colored characters, and a boolean flag constant DEBUG (by default =true).
 Optimize the algorithm to be efficient and fast so that solution can be found in a reasonable amount of time. 
 Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation. 
 Use map as List<CharArray>.
