@@ -106,6 +106,7 @@ Optimize the algorithm to be efficient and fast so that solution can be found in
 Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation. 
 Use map as List<CharArray>.
 use Long instead of Int to avoid overflow.
+Use println("") instead println().
 Add this prompt in comment in the code.
 Show the whole code for the kotlin class.
 """.trim()
