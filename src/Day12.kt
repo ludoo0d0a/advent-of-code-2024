@@ -84,44 +84,44 @@ class Day12 {
 
             val type = grid[startRow][startCol]
             var area = 0L
-            val sides = mutableSetOf<Side>() // row, col, direction (0=top, 1=bottom, 2=left, 3=right)
+            val sides = mutableSetOf<Side>()
             val directions = arrayOf(-1 to 0, 1 to 0, 0 to -1, 0 to 1)
-            val stack = ArrayDeque<Pair<Int, Int>>()
-            stack.add(startRow to startCol)
+            val queue = ArrayDeque<Pair<Int, Int>>()
+            queue.add(startRow to startCol)
 
-            while (stack.isNotEmpty()) {
-                val (row, col) = stack.removeLast()
+            while (queue.isNotEmpty()) {
+                val (row, col) = queue.removeFirst()
                 if (visited[row][col]) continue
 
                 visited[row][col] = true
                 area++
 
+                // Check if this cell is on the boundary
+                var isOnBoundary = false
                 for ((dx, dy) in directions) {
                     val newRow = row + dx
                     val newCol = col + dy
 
                     if (newRow !in grid.indices || newCol !in grid[0].indices ||
                         grid[newRow][newCol] != type) {
-                        // Add side when reaching boundary or different type
+                        isOnBoundary = true
+                        // Add side only for boundary cells
                         when {
-                            dx == -1 -> sides.add(Side(row, col, 0, type)) // top
-                            dx == 1 -> sides.add(Side(row + 1, col, 1, type)) // bottom
-                            dy == -1 -> sides.add(Side(row, col, 2, type)) // left
-                            dy == 1 -> sides.add(Side(row, col + 1, 3, type)) // right
+                            dx == -1 -> sides.add(Side(row, col, 0, type))
+                            dx == 1 -> sides.add(Side(row + 1, col, 1, type))
+                            dy == -1 -> sides.add(Side(row, col, 2, type))
+                            dy == 1 -> sides.add(Side(row, col + 1, 3, type))
                         }
-                        continue
-                    }
-
-                    if (!visited[newRow][newCol]) {
-                        stack.add(newRow to newCol)
+                    } else if (!visited[newRow][newCol]) {
+                        queue.add(newRow to newCol)
                     }
                 }
             }
 
             val mergedSides = mergedSiblingSides(sides)
-
             return Region(type, area, mergedSides.size.toLong(), mergedSides.toList())
         }
+
 
         private fun mergedSiblingSides(sides: Set<Side>): Set<Side> {
             val mergedSides = mutableSetOf<Side>()
