@@ -64,9 +64,13 @@ fun main(args: Array<String>) {
 Use readFileLines() method from Utils.kt to read the content of the input file.
 Do not add a method readFileLines().
 
+Find all solutions to the maze, sorting them by score.
+The score is 1000 * turns count + number of steps to reach the end
+Display each solution, with the score.
+Merge all solutions with the same lowest score, and display total of distinct steps.
+
 Display map on each iteration, using a boolean flag constant DEBUG (by default =false).
-Use map as List<CharArray>
-Optimize the algorithm to be efficient and fast so that solution can be found in a reasonable amount of time. 
+Optimize the algorithm to be efficient and fast so that solution can be found in a reasonable amount of time.
 Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation. 
 Use map as List<CharArray>.
 use Long instead of Int to avoid overflow.
