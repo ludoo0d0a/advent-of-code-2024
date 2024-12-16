@@ -13,18 +13,19 @@ class Day12 {
         @JvmStatic
         fun main(args: Array<String>) {
             checkSample("Day12_star2_sample0", 80)
-//            checkSample("Day12_star2_sample1", 236)
-//            checkSample("Day12_star2_sample2", 368)
-//            checkSample("Day12_star2_sample3", 1206)
-//
-//            val result = calculateTotalPrice("Day12_input")
-//            println("Result2=$result")
+            checkSample("Day12_star2_sample1", 236)
+            checkSample("Day12_star2_sample2", 368)
+            checkSample("Day12_star2_sample3", 1206)
+
+            val result = calculateTotalPrice("Day12_input")
+            println("Result2=$result")
         }
 
         private fun checkSample(filename: String, expectedResult: Long) {
             val result = calculateTotalPrice(filename)
             println("$filename result: $result")
             check(result == expectedResult) { "Expected $expectedResult but got $result for $filename" }
+            println("----------------------------------------")
         }
 
         private fun calculateTotalPrice(filename: String): Long {
@@ -105,9 +106,9 @@ class Day12 {
                     if (i + 1 < sortedSides.size) {
                         val next = sortedSides[i + 1]
                         // Check if sides are adjacent based on direction
-                        if (direction <= 1 && current.second == next.second && current.first + 1 == next.first ||  // vertical (top/bottom)
-                            direction >= 2 && current.first == next.first && current.second + 1 == next.second) {  // horizontal (left/right)
-                            i += 2
+                        if (direction <= 1 && current.first  == next.first && current.second +1== next.second ||  // vertical (top/bottom)
+                            direction >= 2 && current.first +1== next.first && current.second  == next.second) {  // horizontal (left/right)
+                            i += 1
                             continue
                         }
                     }
