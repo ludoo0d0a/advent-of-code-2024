@@ -1,0 +1,103 @@
+considering the following problem: 
+
+It's time again for the Reindeer Olympics! This year, the big event is the Reindeer Maze, where the Reindeer compete for the lowest score. You and The Historians arrive to search for the Chief right as the event is about to start. It wouldn't hurt to watch a little, right? The Reindeer start on the Start Tile (marked S) facing East and need to reach the End Tile (marked E). They can move forward one tile at a time (increasing their score by 1 point), but never into a wall (#). They can also rotate clockwise or counterclockwise 90 degrees at a time (increasing their score by 1000 points). To figure out the best place to sit, you start by grabbing a map (your puzzle input) from a nearby kiosk. For example: ###############
+#.......#....E#
+#.#.###.#.###.#
+#.....#.#...#.#
+#.###.#####.#.#
+#.#.#.......#.#
+#.#.#####.###.#
+#...........#.#
+###.#.#####.#.#
+#...#.....#.#.#
+#.#.#.###.#.#.#
+#.....#...#.#.#
+#.###.#.#.#.#.#
+#S..#.....#...#
+###############
+ There are many paths through this maze, but taking any of the best paths would incur a score of only 7036. This can be achieved by taking a total of 36 steps forward and turning 90 degrees a total of 7 times: 
+###############
+#.......#....E#
+#.#.###.#.###^#
+#.....#.#...#^#
+#.###.#####.#^#
+#.#.#.......#^#
+#.#.#####.###^#
+#..>>>>>>>>v#^#
+###^#.#####v#^#
+#>>^#.....#v#^#
+#^#.#.###.#v#^#
+#^....#...#v#^#
+#^###.#.#.#v#^#
+#S..#.....#>>^#
+###############
+ Here's a second example: #################
+#...#...#...#..E#
+#.#.#.#.#.#.#.#.#
+#.#.#.#...#...#.#
+#.#.#.#.###.#.#.#
+#...#.#.#.....#.#
+#.#.#.#.#.#####.#
+#.#...#.#.#.....#
+#.#.#####.#.###.#
+#.#.#.......#...#
+#.#.###.#####.###
+#.#.#...#.....#.#
+#.#.#.#####.###.#
+#.#.#.........#.#
+#.#.#.#########.#
+#S#.............#
+#################
+ In this maze, the best paths cost 11048 points; following one such path would look like this: #################
+#...#...#...#..E#
+#.#.#.#.#.#.#.#^#
+#.#.#.#...#...#^#
+#.#.#.#.###.#.#^#
+#>>v#.#.#.....#^#
+#^#v#.#.#.#####^#
+#^#v..#.#.#>>>>^#
+#^#v#####.#^###.#
+#^#v#..>>>>^#...#
+#^#v###^#####.###
+#^#v#>>^#.....#.#
+#^#v#^#####.###.#
+#^#v#^........#.#
+#^#v#^#########.#
+#S#>>^..........#
+#################
+ Note that the path shown above includes one 90 degree turn as the very first move, rotating the Reindeer from facing East to facing North. Analyze your map carefully. What is the lowest score a Reindeer could possibly get?
+
+then please write a Kotlin class named Day16, with a main function, to solve this problem. 
+the main method should compute : 
+
+A first method named 'part1', called from main() method, solves this first part of the problem.
+Compute the result for the sample named 'Day16_star1_sample' and for the input, named 'Day16_input'.
+Print the result of part1 to the console.
+EXPECTED_SAMPLE is the expected value for the sample, listed in the problem.
+It should be like this : 
+'
+@JvmStatic
+fun main(args: Array<String>) {
+    val sample1 = readFileLines("Day15_star1_sample")
+    val result_sample1 = part1(sample1)
+    expect(result_sample1, EXPECTED_SAMPLE)
+    println("sample result=$result_sample1")
+    
+    val input = readFileLines("Day15_input")
+    val result_input = part1(input)
+    println("Result=$result_input")
+}
+'
+            
+
+Use readFileLines() method from Utils.kt to read the content of the input file.
+Do not add a method readFileLines().
+
+Display map on each iteration, using a boolean flag constant DEBUG (by default =true).
+Use map as List<CharArray>
+Optimize the algorithm to be efficient and fast so that solution can be found in a reasonable amount of time. 
+Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation. 
+Use map as List<CharArray>.
+use Long instead of Int to avoid overflow.
+Add this prompt in comment in the code.
+Show the whole code for the kotlin class.
