@@ -1,0 +1,8 @@
+Register A: 0
+Register B: 2024
+Register C: 43690
+
+Program: 4,0
+
+Expected:
+out-Register B: 44354
