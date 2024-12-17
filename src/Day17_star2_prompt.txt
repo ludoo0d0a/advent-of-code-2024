@@ -1,0 +1,47 @@
+considering the following problem: 
+
+Digging deeper in the device's manual, you discover the problem: this program is supposed to output another copy of the program! Unfortunately, the value in register A seems to have been corrupted. You'll need to find a new value to which you can initialize register A so that the program's output instructions produce an exact copy of the program itself. For example: Register A: 2024
+Register B: 0
+Register C: 0
+
+Program: 0,3,5,4,3,0
+ This program outputs a copy of itself if register A is instead initialized to 117440. (The original initial value of register A, 2024, is ignored.) What is the lowest positive initial value for register A that causes the program to output a copy of itself?
+
+then please write a Kotlin class named Day17, with a main function, to solve this problem. 
+the main method should compute : 
+
+The first part of the problem is solved, now consider the second part of the problem, 
+Another method named 'part2', called from main() method, solves this second part of the problem.
+Keep the implementation of 'part1' from current class 'Day17'.
+Compute the result for the sample named 'Day17_star2_sample' and for the input, named 'Day17_input'.
+Print the result of part2 to the console.
+EXPECTED_SAMPLE is the expected value for the sample, listed in the problem.
+Now it should be like this : 
+'
+@JvmStatic
+fun main(args: Array<String>) {
+    val sample2 = readFileLines("Day15_star2_sample")
+    val result_sample2 = part2(sample2)
+    println("sample2 result=$result_sample2")
+    
+    val input = readFileLines("Day15_input")
+    val result_input = part1(input)
+    println("Result=$result_input")
+    
+    val result2_input = part2(input)
+    println("Result2=$result_input")
+}
+' 
+            
+
+Use readFileLines() method from Utils.kt to read the content of the input file.
+Do not add a method readFileLines().
+
+Display map on each iteration, using ansi colored characters, and a boolean flag constant DEBUG (by default =true).
+Optimize the algorithm to be efficient and fast so that solution can be found in a reasonable amount of time. 
+Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation. 
+Use map as List<CharArray>.
+use Long instead of Int to avoid overflow.
+Use println("") instead println().
+Add this prompt in comment in the code.
+Show the whole code for the kotlin class.

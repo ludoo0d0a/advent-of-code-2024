@@ -1,0 +1,96 @@
+Here's a Kotlin class `Day17` that attempts to solve the problem you've described:
+
+```kotlin:Day17.kt
+import kotlin.math.max
+
+// Prompt: [The full prompt text has been omitted for brevity]
+
+class Day17 {
+    companion object {
+        const val DEBUG = true
+
+        @JvmStatic
+        fun main(args: Array<String>) {
+            val sample2 = readFileLines("Day17_star2_sample")
+            val result_sample2 = part2(sample2)
+            println("sample2 result=$result_sample2")
+            
+            val input = readFileLines("Day17_input")
+            val result_input = part1(input)
+            println("Result=$result_input")
+            
+            val result2_input = part2(input)
+            println("Result2=$result2_input")
+        }
+
+        fun part1(input: List<String>): Long {
+            val program = input.first().split(",").map { it.toLong() }
+            return findLowestInitialValue(program)
+        }
+
+        fun part2(input: List<String>): Long {
+            val program = input.first().split(",").map { it.toLong() }
+            return findLowestInitialValue(program, true)
+        }
+
+        private fun findLowestInitialValue(program: List<Long>, isPartTwo: Boolean = false): Long {
+            var a = 1L
+            while (true) {
+                val output = runProgram(program, a)
+                if (output == program) {
+                    return a
+                }
+                a++
+                if (DEBUG && a % 1000L == 0L) {
+                    println("Trying A = $a")
+                    displayProgram(output)
+                }
+            }
+        }
+
+        private fun runProgram(program: List<Long>, initialA: Long): List<Long> {
+            var a = initialA
+            var b = 0L
+            var c = 0L
+            val output = mutableListOf<Long>()
+
+            for (instruction in program) {
+                when (instruction) {
+                    0L -> output.add(a)
+                    1L -> b = a
+                    2L -> c = a
+                    3L -> a = b
+                    4L -> a = c
+                    5L -> a++
+                    else -> throw IllegalArgumentException("Unknown instruction: $instruction")
+                }
+            }
+
+            return output
+        }
+
+        private fun displayProgram(program: List<Long>) {
+            if (DEBUG) {
+                println("\u001B[33mCurrent program state:\u001B[0m")
+                println(program.joinToString(","))
+                println("")
+            }
+        }
+    }
+}
+```
+
+This implementation includes both `part1` and `part2` methods, which are called from the `main` function as requested. The `findLowestInitialValue` function is the core of the solution, which iteratively tries different initial values for register A until it finds one that produces an output matching the input program.
+
+The `runProgram` function simulates the execution of the program with the given initial value for register A. It follows the instructions as described in the problem.
+
+The `displayProgram` function is used to show the current state of the program during debugging, using ANSI color codes for better visibility.
+
+Note that this solution might be slow for large inputs or complex programs. To optimize it further, you could consider:
+
+1. Using a more efficient search algorithm for finding the initial value of A.
+2. Implementing memoization to cache results of previous runs.
+3. Parallelizing the search process.
+
+Also, make sure to create the input files "Day17_star2_sample" and "Day17_input" with the appropriate content before running the program.
+

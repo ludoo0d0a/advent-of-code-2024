@@ -1,6 +1,33 @@
+
+/*
+--- Day 17 star 2 ---
+
+Part Two
+
+This implementation includes both `part1` and `part2` methods, which are called from the `main` function as requested. The `findLowestInitialValue` function is the core of the solution, which iteratively tries different initial values for register A until it finds one that produces an output matching the input program.
+
+The `runProgram` function simulates the execution of the program with the given initial value for register A. It follows the instructions as described in the problem.
+
+The `displayProgram` function is used to show the current state of the program during debugging, using ANSI color codes for better visibility.
+
+Note that this solution might be slow for large inputs or complex programs. To optimize it further, you could consider:
+
+1. Using a more efficient search algorithm for finding the initial value of A.
+2. Implementing memoization to cache results of previous runs.
+3. Parallelizing the search process.
+
+Also, make sure to create the input files "Day17_star2_sample" and "Day17_input" with the appropriate content before running the program.
+*/
+import java.util.*
+
+// kotlin:Day17.kt
+import kotlin.math.max
+
+// Prompt: [The full prompt text has been omitted for brevity]
+
 class Day17 {
     companion object {
-        const val DEBUG = true
+        const val DEBUG = false
 
         @JvmStatic
         fun main(args: Array<String>) {
@@ -11,13 +38,19 @@ class Day17 {
 //            runSample("4")
 //            runSample("5")
 
+            // star 2 sample
+//            runSample("", 2)
+
             val input = readFileLines("Day17_input")
-            val result = part1(input)
-            println("Result=${result.output}")
+//            val result_input = part1(input)
+//            dbg("Result=$result_input")
+            
+            val result2_input = part2(input)
+            println("Result2=$result2_input")
         }
 
-        private fun runSample(id: String) {
-            val sample = readFileLines("Day17_star1_sample$id")
+        private fun runSample(id: String, star: Int = 1) {
+            val sample = readFileLines("Day17_star${star}_sample$id")
             val result = part1(sample)
             val expected = parseExpected(sample)
             val expectedRegisters = parseExpectedRegisters(sample)
@@ -28,12 +61,34 @@ class Day17 {
             println("----")
         }
 
+        private fun runSample2(id: String, star: Int = 2) {
+            val sample = readFileLines("Day17_star${star}_sample$id")
+            val result = part2(sample)
+            val total = parseExpected(sample)
+            val expectedRegisters = parseExpectedRegisters(sample)
+//            checkRegisters(result.registers, expectedRegisters)
+//            if (expected.length>1)
+//                expect(result.output, expected)
+            println("sample$id total=${total}")
+            println("----")
+        }
+
         data class Result(val output: String, val registers: IntArray)
+
+        fun part2(input: List<String>): Long {
+            val program = parseProgram(input)
+            return findLowestInitialValue(program)
+        }
 
         fun part1(input: List<String>): Result {
             val registers = parseRegisters(input)
             val program = parseProgram(input)
 
+            val output = runSoftware(program, registers)
+            return Result(output, registers);
+        }
+
+        private fun runSoftware(program: IntArray, registers: IntArray): String {
             val output = mutableListOf<Int>()
             var instructionPointer = 0
             var iteration = 0
@@ -42,61 +97,74 @@ class Day17 {
                 val opcode = program[instructionPointer]
                 val operand = program[instructionPointer + 1]
 
-                println("\nIteration ${iteration++}")
-                println("IP=$instructionPointer, Opcode=$opcode, Operand=$operand")
-                println("Registers before: [${registers.joinToString()}]")
+                dbg("\nIteration ${iteration++}")
+                dbg("IP=$instructionPointer, Opcode=$opcode, Operand=$operand")
+                dbg("Registers before: [${registers.joinToString()}]")
 
                 when (opcode) {
                     0 -> {
                         val shift = getComboValue(operand, registers)
                         // r / (2^B)
                         registers[0] = (registers[0] / (1L shl shift)).toInt()
-                        println("Operation: R0 = R0 / (1 << $shift)")
+                        dbg("Operation: R0 = R0 / (1 << $shift)")
                     }
+
                     1 -> {
                         registers[1] = registers[1] xor operand
-                        println("Operation: R1 = R1 XOR $operand")
+                        dbg("Operation: R1 = R1 XOR $operand")
                     }
+
                     2 -> {
                         val combo = getComboValue(operand, registers)
                         registers[1] = combo % 8
-                        println("Operation: R1 = $combo % 8")
+                        dbg("Operation: R1 = $combo % 8")
                     }
+
                     3 -> {
-                        println("Operation: JNZ R0 -> $operand")
+                        dbg("Operation: JNZ R0 -> $operand")
                         if (registers[0] != 0) {
                             instructionPointer = operand
-                            println("Jump taken to $operand")
+                            dbg("Jump taken to $operand")
                             continue
                         }
                     }
+
                     4 -> {
                         registers[1] = registers[1] xor registers[2]
-                        println("Operation: R1 = R1 XOR R2")
+                        dbg("Operation: R1 = R1 XOR R2")
                     }
+
                     5 -> {
                         val value = getComboValue(operand, registers) % 8
                         output.add(value)
-                        println("Operation: OUTPUT ${value}")
+                        dbg("Operation: OUTPUT ${value}")
                     }
+
                     6 -> {
                         val shift = getComboValue(operand, registers)
                         registers[1] = registers[0] / (1L shl shift).toInt()
-                        println("Operation: R1 = R0 / (1 << $shift)")
+                        dbg("Operation: R1 = R0 / (1 << $shift)")
                     }
+
                     7 -> {
                         val shift = getComboValue(operand, registers)
                         registers[2] = registers[0] / (1L shl shift).toInt()
-                        println("Operation: R2 = R0 / (1 << $shift)")
+                        dbg("Operation: R2 = R0 / (1 << $shift)")
                     }
                 }
 
-                println("Registers after: [${registers.joinToString()}]")
+                dbg("Registers after: [${registers.joinToString()}]")
                 instructionPointer += 2
             }
-
+//            return output
             val out = output.joinToString(",")
-            return Result(out, registers);
+            return out
+        }
+
+        private fun dbg(text: String) {
+            if (DEBUG)
+                println(text)
+
         }
 
         private fun parseRegisters(input: List<String>): IntArray {
@@ -155,5 +223,29 @@ class Day17 {
                 throw AssertionError("Expected $expected, but got $actual")
             }
         }
+
+        private fun findLowestInitialValue(program: IntArray): Long {
+//            var a = 1L
+            var a = 3 * 1000000L
+            val programRef = program.joinToString(",")
+            while (true) {
+                val registers = makeRegisters(a)
+                val output = runSoftware(program, registers)
+                if (output == programRef) {
+                    return a
+                }
+                a++
+                if (a % 100000L == 0L) {
+                    println("Trying A = $a")
+                }
+            }
+        }
+
+        private fun makeRegisters(initialA: Long): IntArray {
+            val registers: IntArray = listOf(initialA, 0, 0).map { it.toInt() }.toIntArray()
+            return registers
+        }
+
     }
 }
+// end-of-code
