@@ -1,13 +1,15 @@
 class Day17 {
     companion object {
         const val DEBUG = true
-        var registers: IntArray ;
 
         @JvmStatic
         fun main(args: Array<String>) {
-//            runSample("")
-//            runSample("1")
+            runSample("")
+            runSample("1")
             runSample("2")
+            runSample("3")
+            runSample("4")
+            runSample("5")
 
 //            val input = readFileLines("Day17_input")
 //            val result_input = part1(input)
@@ -16,18 +18,19 @@ class Day17 {
 
         private fun runSample(id: String) {
             val sample = readFileLines("Day17_star1_sample$id")
-            val result_sample = part1(sample)
+            val result = part1(sample)
             val expected = parseExpected(sample)
             val expectedRegisters = parseExpectedRegisters(sample)
-            checkRegisters(registers, expectedRegisters)
-            expect(result_sample, expected)
-            println("sample$id result=$result_sample")
+            checkRegisters(result.registers, expectedRegisters)
+            expect(result.output, expected)
+            println("sample$id result=$result.output")
             println("----")
         }
 
+        data class Result(val output: String, val registers: IntArray)
 
-        fun part1(input: List<String>): String {
-            registers = parseRegisters(input)
+        fun part1(input: List<String>): Result {
+            val registers = parseRegisters(input)
             val program = parseProgram(input)
 
             val output = mutableListOf<Int>()
@@ -91,7 +94,8 @@ class Day17 {
                 instructionPointer += 2
             }
 
-            return output.joinToString(",")
+            val out = output.joinToString(",")
+            return Result(out, registers);
         }
 
         private fun parseRegisters(input: List<String>): IntArray {
