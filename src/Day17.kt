@@ -1,3 +1,5 @@
+import kotlinx.coroutines.*
+import kotlin.system.exitProcess
 
 /*
 --- Day 17 star 2 ---
@@ -18,16 +20,18 @@ Note that this solution might be slow for large inputs or complex programs. To o
 
 Also, make sure to create the input files "Day17_star2_sample" and "Day17_input" with the appropriate content before running the program.
 */
-import java.util.*
 
 // kotlin:Day17.kt
-import kotlin.math.max
 
 // Prompt: [The full prompt text has been omitted for brevity]
+
+private const val MILLION = 1000000L
 
 class Day17 {
     companion object {
         const val DEBUG = false
+
+        val visited = mutableMapOf<Pair<Int, IntArray>, Boolean >()
 
         @JvmStatic
         fun main(args: Array<String>) {
@@ -73,7 +77,11 @@ class Day17 {
             println("----")
         }
 
-        data class Result(val output: String, val registers: IntArray)
+        data class Result(
+            val output: String,
+            val registers: IntArray,
+            val visited: Map<Pair<Int, IntArray>, Boolean >?
+            )
 
         fun part2(input: List<String>): Long {
             val program = parseProgram(input)
@@ -83,82 +91,91 @@ class Day17 {
         fun part1(input: List<String>): Result {
             val registers = parseRegisters(input)
             val program = parseProgram(input)
-
-            val output = runSoftware(program, registers)
-            return Result(output, registers);
+            return runSoftware(program, registers)
         }
 
-        private fun runSoftware(program: IntArray, registers: IntArray): String {
-            val output = mutableListOf<Int>()
+        private fun runSoftware(program: IntArray, registers: IntArray): Result {
+            var output = mutableListOf<Int>()
             var instructionPointer = 0
             var iteration = 0
 
+            val localVisited = mutableMapOf<Pair<Int, IntArray>, Boolean >()
+
             while (instructionPointer < program.size) {
+                // Check if we already processed this register state
+                //println("$instructionPointer ; ${registers.joinToString(",")}")
+//                if (visited.containsKey(Pair(instructionPointer,registers))) {
+//                    return Result("", registers, null);
+//                }
+
                 val opcode = program[instructionPointer]
                 val operand = program[instructionPointer + 1]
 
-                dbg("\nIteration ${iteration++}")
-                dbg("IP=$instructionPointer, Opcode=$opcode, Operand=$operand")
-                dbg("Registers before: [${registers.joinToString()}]")
+//                dbg("\nIteration ${iteration++}")
+//                dbg("IP=$instructionPointer, Opcode=$opcode, Operand=$operand")
+//                dbg("Registers before: [${registers.joinToString()}]")
 
                 when (opcode) {
                     0 -> {
                         val shift = getComboValue(operand, registers)
                         // r / (2^B)
                         registers[0] = (registers[0] / (1L shl shift)).toInt()
-                        dbg("Operation: R0 = R0 / (1 << $shift)")
+                      //  dbg("Operation: R0 = R0 / (1 << $shift)")
                     }
 
                     1 -> {
                         registers[1] = registers[1] xor operand
-                        dbg("Operation: R1 = R1 XOR $operand")
+                      //  dbg("Operation: R1 = R1 XOR $operand")
                     }
 
                     2 -> {
                         val combo = getComboValue(operand, registers)
                         registers[1] = combo % 8
-                        dbg("Operation: R1 = $combo % 8")
+                      //  dbg("Operation: R1 = $combo % 8")
                     }
 
                     3 -> {
                         dbg("Operation: JNZ R0 -> $operand")
                         if (registers[0] != 0) {
                             instructionPointer = operand
-                            dbg("Jump taken to $operand")
+                      //      dbg("Jump taken to $operand")
                             continue
                         }
                     }
 
                     4 -> {
                         registers[1] = registers[1] xor registers[2]
-                        dbg("Operation: R1 = R1 XOR R2")
+                       // dbg("Operation: R1 = R1 XOR R2")
                     }
 
                     5 -> {
                         val value = getComboValue(operand, registers) % 8
                         output.add(value)
-                        dbg("Operation: OUTPUT ${value}")
+                       // dbg("Operation: OUTPUT ${value}")
                     }
 
                     6 -> {
                         val shift = getComboValue(operand, registers)
-                        registers[1] = registers[0] / (1L shl shift).toInt()
-                        dbg("Operation: R1 = R0 / (1 << $shift)")
+                        registers[1] = (registers[0] / (1L shl shift)).toInt()
+                       // dbg("Operation: R1 = R0 / (1 << $shift)")
                     }
 
                     7 -> {
                         val shift = getComboValue(operand, registers)
-                        registers[2] = registers[0] / (1L shl shift).toInt()
-                        dbg("Operation: R2 = R0 / (1 << $shift)")
+                        registers[2] = (registers[0] / (1L shl shift)).toInt()
+                       // dbg("Operation: R2 = R0 / (1 << $shift)")
                     }
                 }
 
-                dbg("Registers after: [${registers.joinToString()}]")
+                //dbg("Registers after: [${registers.joinToString()}]")
                 instructionPointer += 2
+
+//                localVisited.put(Pair(instructionPointer,registers), true)
             }
 //            return output
             val out = output.joinToString(",")
-            return out
+
+            return Result(out, registers, localVisited);
         }
 
         private fun dbg(text: String) {
@@ -225,21 +242,43 @@ class Day17 {
         }
 
         private fun findLowestInitialValue(program: IntArray): Long {
-//            var a = 1L
-            var a = 3 * 1000000L
+            val scope = CoroutineScope(Dispatchers.Default)
+            val initialValue = 15400 * MILLION
+            val batchSize = 500 * MILLION
+            val logSize = 10 * MILLION
+            val jobs = mutableListOf<Deferred<Long?>>()
             val programRef = program.joinToString(",")
-            while (true) {
-                val registers = makeRegisters(a)
-                val output = runSoftware(program, registers)
-                if (output == programRef) {
-                    return a
-                }
-                a++
-                if (a % 100000L == 0L) {
-                    println("Trying A = $a")
-                }
+            val processors = Runtime.getRuntime().availableProcessors()
+            repeat(processors) { processor ->
+                jobs.add(scope.async {
+                    val min = initialValue + processor * batchSize + 1
+                    var max = initialValue + (processor+1) * batchSize + 1
+                    val range = " from ${min/MILLION} to ${max/MILLION}"
+                    var a = min
+                    while (a < max) {
+                        val registers = makeRegisters(a)
+                        val r = runSoftware(program, registers)
+                        if (r.output == programRef) {
+                            println("Found >>>>> $a")
+                            exitProcess(0)
+                            return@async a
+                        }
+                        //a += processors
+                        ++a
+                        if (a % logSize == 0L) {
+                            println("Processor $processor  - Processed up to ${a/MILLION} - $range")
+                        }
+                    }
+                    println("End of processor $processor  -  reached ${a/MILLION} M")
+                    return@async null;
+                })
+            }
+
+            return runBlocking {
+                jobs.awaitAll().filterNotNull().min()
             }
         }
+
 
         private fun makeRegisters(initialA: Long): IntArray {
             val registers: IntArray = listOf(initialA, 0, 0).map { it.toInt() }.toIntArray()
