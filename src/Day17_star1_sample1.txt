@@ -4,5 +4,5 @@ Register C: 9
 
 Program: 2,6
 
-Expected:
+Expected: ?
 out-Register B: 1

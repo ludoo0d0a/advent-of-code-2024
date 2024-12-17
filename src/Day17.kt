@@ -4,16 +4,16 @@ class Day17 {
 
         @JvmStatic
         fun main(args: Array<String>) {
-            runSample("")
-            runSample("1")
-            runSample("2")
-            runSample("3")
-            runSample("4")
-            runSample("5")
+//            runSample("")
+//            runSample("1")
+//            runSample("2")
+//            runSample("3")
+//            runSample("4")
+//            runSample("5")
 
-//            val input = readFileLines("Day17_input")
-//            val result_input = part1(input)
-//            println("Result=$result_input")
+            val input = readFileLines("Day17_input")
+            val result = part1(input)
+            println("Result=${result.output}")
         }
 
         private fun runSample(id: String) {
@@ -22,8 +22,9 @@ class Day17 {
             val expected = parseExpected(sample)
             val expectedRegisters = parseExpectedRegisters(sample)
             checkRegisters(result.registers, expectedRegisters)
-            expect(result.output, expected)
-            println("sample$id result=$result.output")
+            if (expected.length>1)
+                expect(result.output, expected)
+            println("sample$id result=${result.output}")
             println("----")
         }
 
@@ -108,7 +109,7 @@ class Day17 {
         }
         private fun parseExpected(input: List<String>): String {
             val expectedLine = input.filter{it.startsWith("Expected")}.first()
-            return expectedLine.split(": ")[1]
+            return expectedLine.split(": ").getOrNull(1).orEmpty()
         }
         private fun parseExpectedRegisters(input: List<String>): Map<String, Int> {
             val registers = input
@@ -122,12 +123,22 @@ class Day17 {
 
         private fun checkRegisters(registers: IntArray, expectedRegisters: Map<String, Int>) {
             expectedRegisters.forEach({ (register, expectedValue) ->
-                val actualValue = registers[register.toInt()]
+                val registerPos = getRegisterPosition(register)
+                val actualValue = registers[registerPos]
                 if (actualValue != expectedValue) {
                     throw AssertionError("Expected $register to be $expectedValue, but got $actualValue")
                 }
             })
         }
+        private fun getRegisterPosition(register: String): Int {
+            return when (register) {
+                "A" -> 0
+                "B" -> 1
+                "C" -> 2
+                else -> throw IllegalArgumentException("Invalid register: $register")
+            }
+        }
+
 
         private fun getComboValue(operand: Int, registers: IntArray): Int {
             return when (operand) {
