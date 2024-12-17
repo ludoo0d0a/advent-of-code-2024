@@ -14,7 +14,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-
 class Setup {
     val session_cookie = System.getenv("SESSION_COOKIE")
 //    val cody_endpoint = System.getenv("SRC_ENDPOINT")
@@ -51,10 +50,10 @@ It should be like this :
 '
 @JvmStatic
 fun main(args: Array<String>) {
-    val sample1 = readFileLines("Day15_star1_sample")
-    val result_sample1 = part1(sample1)
-    expect(result_sample1, EXPECTED_SAMPLE)
-    println("sample result=${'$'}result_sample1")
+//    val sample1 = readFileLines("Day15_star1_sample")
+//    val result_sample1 = part1(sample1)
+//    expect(result_sample1, EXPECTED_SAMPLE)
+//    println("sample result=${'$'}result_sample1")
     
     val input = readFileLines("Day15_input")
     val result_input = part1(input)
@@ -74,13 +73,13 @@ Now it should be like this :
 '
 @JvmStatic
 fun main(args: Array<String>) {
-    val sample2 = readFileLines("Day15_star2_sample")
-    val result_sample2 = part2(sample2)
-    println("sample2 result=${'$'}result_sample2")
+//    val sample2 = readFileLines("Day15_star2_sample")
+//    val result_sample2 = part2(sample2)
+//    println("sample2 result=${'$'}result_sample2")
     
     val input = readFileLines("Day15_input")
-    val result_input = part1(input)
-    println("Result=${'$'}result_input")
+//    val result_input = part1(input)
+//    println("Result=${'$'}result_input")
     
     val result2_input = part2(input)
     println("Result2=${'$'}result_input")
