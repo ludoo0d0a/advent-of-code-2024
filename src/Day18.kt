@@ -1,85 +1,89 @@
 /*
-Day 10: Hoof It
+Day 10: Hoof It - Part 2
 
-You need to find the shortest path from (0,0) to (70,70) while avoiding corrupted memory locations.
-Each byte falls into memory space at given coordinates, making that location corrupted.
-You can move up, down, left, right but cannot enter corrupted locations or leave boundaries.
+Find the coordinates of the first byte that will prevent the exit from being reachable.
+Need to simulate bytes falling and check path existence after each byte.
+Return coordinates as "x,y" when no path exists.
 */
 
 class Day18 {
     companion object {
         private const val DEBUG = false
-        private const val EXPECTED_SAMPLE = 22L
-        private val directions = arrayOf(-1 to 0, 1 to 0, 0 to -1, 0 to 1) // up, down, left, right
+        private const val EXPECTED_SAMPLE1 = 22L
+        private const val EXPECTED_SAMPLE2 = "6,1"
+        private val directions = arrayOf(-1 to 0, 1 to 0, 0 to -1, 0 to 1)
 
         @JvmStatic
         fun main(args: Array<String>) {
-            val sample1 = readFileLines("Day18_star1_sample")
-            val result_sample1 = part1(sample1)
-            //e
-            println("sample result=$result_sample1")
+//            val sample2 = readFileLines("Day18_star2_sample")
+//            val result_sample2 = part2(sample2)
+//            //expect(result_sample2, EXPECTED_SAMPLE2)
+//            println("sample2 result=$result_sample2")
 
             val input = readFileLines("Day18_input")
-            val result_input = part1(input)
-            println("Result=$result_input")
+            val result2_input = part2(input)
+            println("Result2=$result2_input")
         }
 
-        private fun part1(input: List<String>): Long {
-            // Parse coordinates
+        private fun part2(input: List<String>): String {
             val bytes = input.map { line ->
                 val (x, y) = line.split(",").map { it.toInt() }
                 x to y
             }
 
-            // Determine grid size
             val maxX = bytes.maxOf { it.first }
             val maxY = bytes.maxOf { it.second }
             val grid = Array(maxY + 1) { CharArray(maxX + 1) { '.' } }
 
-            // Mark corrupted locations for first 1024 bytes
-            val bytesToSimulate = minOf(1024, bytes.size)
-            for (i in 0 until bytesToSimulate) {
+            // Try each byte until path is blocked
+            for (i in bytes.indices) {
                 val (x, y) = bytes[i]
                 grid[y][x] = '#'
+
                 if (DEBUG) {
+                    println("\nAfter byte $i at ($x,$y):")
                     printGrid(grid)
-                    println("")
+                }
+
+                // Check if path still exists
+                if (!hasPathToExit(grid)) {
+                    return "$x,$y"
                 }
             }
 
-            // Find shortest path using BFS
-            return findShortestPath(grid)
+            return "No blocking byte found"
         }
 
-        private fun findShortestPath(grid: Array<CharArray>): Long {
+        private fun hasPathToExit(grid: Array<CharArray>): Boolean {
             val rows = grid.size
             val cols = grid[0].size
             val visited = Array(rows) { BooleanArray(cols) }
-            val queue = ArrayDeque<Triple<Int, Int, Long>>()
-            queue.add(Triple(0, 0, 0)) // row, col, steps
+            val queue = ArrayDeque<Pair<Int, Int>>()
+
+            queue.add(0 to 0)
             visited[0][0] = true
 
             while (queue.isNotEmpty()) {
-                val (row, col, steps) = queue.removeFirst()
+                val (row, col) = queue.removeFirst()
 
-                // Check if reached destination
                 if (row == rows - 1 && col == cols - 1) {
-                    return steps
+                    return true
                 }
 
-                // Try all directions
                 for ((dr, dc) in directions) {
                     val newRow = row + dr
                     val newCol = col + dc
 
-                    if (isValid(newRow, newCol, grid) && !visited[newRow][newCol] && grid[newRow][newCol] != '#') {
-                        queue.add(Triple(newRow, newCol, steps + 1))
+                    if (isValid(newRow, newCol, grid) &&
+                        !visited[newRow][newCol] &&
+                        grid[newRow][newCol] != '#') {
+                        queue.add(newRow to newCol)
                         visited[newRow][newCol] = true
                     }
                 }
             }
 
-            return -1L // No path found
+            return false
         }
 
         private fun isValid(row: Int, col: Int, grid: Array<CharArray>): Boolean {
