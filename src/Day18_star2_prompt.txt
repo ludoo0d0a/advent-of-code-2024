@@ -1,0 +1,56 @@
+considering the following problem: 
+
+The Historians aren't as used to moving around in this pixelated universe as you are. You're afraid they're not going to be fast enough to make it to the exit before the path is completely blocked. To determine how fast everyone needs to go, you need to determine the first byte that will cut off the path to the exit. In the above example, after the byte at 1,1 falls, there is still a path to the exit: O..#OOO
+O##OO#O
+O#OO#OO
+OOO#OO#
+###OO##
+.##O###
+#.#OOOO
+ However, after adding the very next byte (at 6,1), there is no longer a path to the exit: ...#...
+.##..##
+.#..#..
+...#..#
+###..##
+.##.###
+#.#....
+ So, in this example, the coordinates of the first byte that prevents the exit from being reachable are 6,1. Simulate more of the bytes that are about to corrupt your memory space. What are the coordinates of the first byte that will prevent the exit from being reachable from your starting position? (Provide the answer as two integers separated by a comma with no other characters.)
+
+then please write a Kotlin class named Day18, with a main function, to solve this problem. 
+the main method should compute : 
+
+The first part of the problem is solved, now consider the second part of the problem, 
+Another method named 'part2', called from main() method, solves this second part of the problem.
+Keep the implementation of 'part1' from current class 'Day18'.
+Compute the result for the sample named 'Day18_star2_sample' and for the input, named 'Day18_input'.
+Print the result of part2 to the console.
+EXPECTED_SAMPLE is the expected value for the sample, listed in the problem.
+Now it should be like this : 
+'
+@JvmStatic
+fun main(args: Array<String>) {
+//    val sample2 = readFileLines("Day18_star2_sample")
+//    val result_sample2 = part2(sample2)
+//    println("sample2 result=$result_sample2")
+    
+    val input = readFileLines("Day18_input")
+//    val result_input = part1(input)
+//    println("Result=$result_input")
+    
+    val result2_input = part2(input)
+    println("Result2=$result_input")
+}
+' 
+            
+
+Use readFileLines() method from Utils.kt to read the content of the input file.
+Do not add a method readFileLines().
+
+Display map on each iteration, using ansi colored characters, and a boolean flag constant DEBUG (by default =true).
+Optimize the algorithm to be efficient and fast so that solution can be found in a reasonable amount of time. 
+Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation. 
+Use map as List<CharArray>.
+use Long instead of Int to avoid overflow.
+Use println("") instead println().
+Add this prompt in comment in the code.
+Show the whole code for the kotlin class.
