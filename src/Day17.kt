@@ -1,6 +1,12 @@
 import kotlinx.coroutines.*
 import kotlin.system.exitProcess
 
+/**
+ * I noticed that in each step, the value of the A-register can be expressed as 8X+Y, where X is the value of the A-register from the previous step, and Y is a small additional value.
+ *
+ * Using this observation, I wrote a simple program to calculate the A-register value for a subsequence of the program. I multiplied the found A-register value by 8 and performed a small brute-force search to find the next subsequence, which was one item longer than the previous one
+ */
+
 /*
 --- Day 17 star 2 ---
 
@@ -85,8 +91,36 @@ class Day17 {
 
         fun part2(input: List<String>): Long {
             val program = parseProgram(input)
-            return findLowestInitialValue(program)
+//            return findLowestInitialValue(program)
+            return findSequencePattern(program)
         }
+
+        fun findSequencePattern(program: IntArray): Long {
+            var currentA = 1L
+            var sequence = mutableListOf<Int>()
+
+            for (length in 1..program.size/2) {
+                // Try values around currentA * 8
+                val baseValue = currentA * 8
+                for (offset in -10..10) {
+                    val testA = baseValue + offset
+                    val registers = intArrayOf(testA.toInt(), 0, 0)
+                    val result = runSoftware(program, registers)
+
+                    // Check if output matches our target sequence length
+                    val outputs = result.output.split(",").map { it.toInt() }
+                    if (outputs.size == length && outputs == program.take(length)) {
+                        currentA = testA
+                        sequence = outputs.toMutableList()
+                        println("Found match for length $length: A=$testA, sequence=${outputs.joinToString(",")}")
+                        break
+                    }
+                }
+            }
+
+            return currentA
+        }
+
 
         fun part1(input: List<String>): Result {
             val registers = parseRegisters(input)
