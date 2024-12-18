@@ -28,19 +28,19 @@ Print the result of part2 to the console using the following format : "Result2=X
 
 A region defined by all adjacent letter of the same value.
 A region can be found inside another one bigger.
-Count the numbers of sides of the perimeter of each region.
-The perimeter can be computed using a contour tracing algorithm. (Square Tracing algorithm or Moore-Neighbor Tracing)
-Don't forget to count inside sides.
-Compute the area of each region by counting the numbers of letters in this region.
-Compute the price of each region, by multiplying the area by the number of sides of the perimeter.
-The sides are counted by following the outer perimeter of each shape, where each straight line segment counts as one side
+Count the numbers of corners of the perimeter of each region.
+For this, implement countCorners() to find all corners by traversing area and detect corners using clockwise rotation.
 
-Compute the total price for files Day12_star2_sample0, log details and check expected result is 80. (A area=4 sides=4, B area=4 sides=4, C area=4 sides=8, D area=3 sides=4)
+Compute the area of each region by counting the numbers of letters in this region.
+Compute the price of each region, by multiplying the area by the number of corners of the perimeter.
+The corners are counted by following the outer perimeter of each shape, where each straight line segment counts as one side
+
+Compute the total price for files Day12_star2_sample0, log details and check expected result is 80. (A area=4 corners=4, B area=4 corners=4, C area=4 corners=8, D area=3 corners=4)
 Compute the total price for files Day12_star2_sample1, log details and check expected result is 236.
 Compute the total price for files Day12_star2_sample2, log details and check expected result is 368.
 Compute the total price for files Day12_star2_sample3, log details and check expected result is 1206.
 
-Log information for each region and samples: sides count, area, price
+Log information for each region and samples: corners count, area, price
 
 Optimize the algorithm to be be efficient and fast so that solution can be found in a reasonable amount of time. 
 Use indexes as soon as you can to avoid re-calculating the same value and lost time in long computation. 
