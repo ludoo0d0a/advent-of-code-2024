@@ -392,8 +392,7 @@ $code
     }
 
     private fun authCody(): Boolean {
-        val command = mutableListOf("sh", "-c", "cody auth login")
-        val r = execute(command)
+        val r = executeSh( "cody auth login")
         // login in error stream ??
         val auth = r.error.contains("You are already logged in as ")
         if (!auth)
@@ -412,13 +411,18 @@ $code
         if (fileList.isBlank())
             throw Exception("No context files found")
 
-        return executeSh("cody chat --context-file $fileList --stdin", prompt)
+        val r = executeSh("cody chat --context-file $fileList --stdin", prompt)
+        return r.output
+    }
+    private fun isWindows(): Boolean {
+        return System.getProperty("os.name").lowercase().contains("windows")
     }
 
-    private fun executeSh(command: String, stdin: String? = null): String {
-        val commands = mutableListOf("sh", "-c", command)
+    private fun executeSh(command: String, stdin: String? = null): ShellResponse {
+        // You pass the command to run as argument to the shell ("sh", "-c", "cmd args" or "cmd.exe", "/c", "cmd args")
+        val commands = if (isWindows()) listOf("cmd.exe", "/c", command) else listOf("sh", "-c", command)
         writeFile("Day${dayPad}_star${star}_command.txt", command)
-        return execute(commands, stdin).output
+        return execute(commands, stdin)
     }
 
     private fun execute(command: String): ShellResponse {
@@ -471,7 +475,7 @@ $code
     }
 
     fun buildRunProgram(): String {
-        val content = executeSh("gradle run --args='--run --day $day'")
+        val content = executeSh("gradle run --args='--run --day $day'").output
         val response = content
 //            .substringAfter("Result=").
             .substringAfter("Result") //Result2=1471452
