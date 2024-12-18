@@ -33,7 +33,7 @@ If you're stuck with Kotlin-specific questions or anything related to this templ
 ```bash
 export SRC_ENDPOINT=ENDPOINT
 export SRC_ACCESS_TOKEN=ACCESS_TOKEN
-cody auth login
+cody auth login --web
 
 cody auth whoami
 

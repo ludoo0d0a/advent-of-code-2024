@@ -50,12 +50,12 @@ It should be like this :
 '
 @JvmStatic
 fun main(args: Array<String>) {
-//    val sample1 = readFileLines("Day15_star1_sample")
+//    val sample1 = readFileLines("Day${dayPad}_star1_sample")
 //    val result_sample1 = part1(sample1)
 //    expect(result_sample1, EXPECTED_SAMPLE)
 //    println("sample result=${'$'}result_sample1")
     
-    val input = readFileLines("Day15_input")
+    val input = readFileLines("Day${dayPad}_input")
     val result_input = part1(input)
     println("Result=${'$'}result_input")
 }
@@ -73,11 +73,11 @@ Now it should be like this :
 '
 @JvmStatic
 fun main(args: Array<String>) {
-//    val sample2 = readFileLines("Day15_star2_sample")
+//    val sample2 = readFileLines("Day${dayPad}_star2_sample")
 //    val result_sample2 = part2(sample2)
 //    println("sample2 result=${'$'}result_sample2")
     
-    val input = readFileLines("Day15_input")
+    val input = readFileLines("Day${dayPad}_input")
 //    val result_input = part1(input)
 //    println("Result=${'$'}result_input")
     
@@ -125,6 +125,9 @@ Show the whole code for the kotlin class.
             val document = Jsoup.parse(html)
             val articles = document.select("main > article")
             val articlesCount = articles.size
+            if (articlesCount==0)
+                throw Exception("Puzzle not found for day $day")
+
             star = Math.max(star, articlesCount) //star2 if found star1 solved
             println("********** Current star : $star")
             val article = articles.get(star - 1)
