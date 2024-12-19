@@ -18,13 +18,44 @@ class Day19 {
             println("Sample result: ${part1(sample)}")
 
             val input = readFileLines("Day19_input")
-            println("Result: ${part1(input)}")
+//            println("Result: ${part1(input)}")
+            println("Result: ${part2(input)}")
         }
 
         fun part1(input: List<String>): Int {
             val patterns = parsePatterns(input)
             val designs = parseDesigns(input)
             return designs.count { design -> isDesignPossible(design, patterns) }
+        }
+
+        fun part2(input: List<String>): Int {
+            val patterns = parsePatterns(input)
+            val designs = parseDesigns(input)
+
+            return designs.sumOf { design ->
+                val count = countArrangements(design, patterns)
+                println("Design: $design -> $count arrangements")
+                count
+            }
+        }
+
+        private fun countArrangements(design: String, patterns: Set<String>, currentPath: List<String> = emptyList()): Int {
+            if (design.isEmpty()) {
+                //println("  Found arrangement: ${currentPath.joinToString(" + ")}")
+                return 1
+            }
+
+            var total = 0
+            for (pattern in patterns) {
+                if (design.startsWith(pattern)) {
+                    total += countArrangements(
+                        design.substring(pattern.length),
+                        patterns,
+                        currentPath + pattern
+                    )
+                }
+            }
+            return total
         }
 
         private fun parsePatterns(input: List<String>): Set<String> {
