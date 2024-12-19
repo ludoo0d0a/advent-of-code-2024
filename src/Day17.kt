@@ -3,8 +3,9 @@ import kotlin.system.exitProcess
 
 /**
  * I noticed that in each step, the value of the A-register can be expressed as 8X+Y, where X is the value of the A-register from the previous step, and Y is a small additional value.
- *
  * Using this observation, I wrote a simple program to calculate the A-register value for a subsequence of the program. I multiplied the found A-register value by 8 and performed a small brute-force search to find the next subsequence, which was one item longer than the previous one
+ * https://github.com/int02h/advent-of-code/blob/main/src/main/kotlin/aoc2024/Day17.kt
+ *
  */
 
 /*
