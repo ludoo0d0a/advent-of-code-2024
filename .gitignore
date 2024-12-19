@@ -4,3 +4,4 @@
 build
 local.properties
 .answer
+*_input.txt
