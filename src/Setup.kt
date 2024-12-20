@@ -106,7 +106,8 @@ Use indexes as soon as you can to avoid re-calculating the same value and lost t
 Use map as List<CharArray>.
 use Long instead of Int to avoid overflow.
 Use println("") instead println().
-Add this prompt in comment in the code.
+Import java.util.* at the top of the class, if not there.
+Add this prompt in comment at the top of the code.
 Show the whole code for the kotlin class.
 """.trim()
     }
