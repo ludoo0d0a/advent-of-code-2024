@@ -1,4 +1,3 @@
-
 /*
 --- Day 20 star 2 ---
 
@@ -46,8 +45,95 @@ class Day20 {
         }
 
         fun part1(input: List<String>): Long {
-            // Implementation of part1 (not provided in the prompt)
-            return 0L
+            val map = input.map { it.toCharArray() }.toList()
+            val start = findPosition(map, 'S')
+            val end = findPosition(map, 'E')
+
+            val baseTime = bfs(map, start, end)
+            val cheats = findCheats(map, start, end, baseTime)
+
+            return cheats.count { it >= 100L }.toLong()
+        }
+
+        private fun findPosition(map: List<CharArray>, char: Char): Pair<Int, Int> {
+            for (y in map.indices) {
+                for (x in map[y].indices) {
+                    if (map[y][x] == char) return Pair(x, y)
+                }
+            }
+            throw IllegalArgumentException("Character $char not found in map")
+        }
+
+        private fun bfs(map: List<CharArray>, start: Pair<Int, Int>, end: Pair<Int, Int>): Long {
+            val queue: Queue<Triple<Int, Int, Long>> = LinkedList()
+            val visited = mutableSetOf<Pair<Int, Int>>()
+
+            queue.offer(Triple(start.first, start.second, 0L))
+            visited.add(start)
+
+            while (queue.isNotEmpty()) {
+                val (x, y, time) = queue.poll()
+                if (x == end.first && y == end.second) return time
+
+                for ((dx, dy) in listOf(-1 to 0, 1 to 0, 0 to -1, 0 to 1)) {
+                    val nx = x + dx
+                    val ny = y + dy
+                    if (nx in map[0].indices && ny in map.indices && map[ny][nx] != '#' && Pair(nx, ny) !in visited) {
+                        queue.offer(Triple(nx, ny, time + 1))
+                        visited.add(Pair(nx, ny))
+                    }
+                }
+            }
+            throw IllegalStateException("No path found from start to end")
+        }
+
+        private fun findCheats(
+            map: List<CharArray>,
+            start: Pair<Int, Int>,
+            end: Pair<Int, Int>,
+            baseTime: Long
+        ): List<Long> {
+            val cheats = mutableListOf<Long>()
+            for (y in map.indices) {
+                for (x in map[0].indices) {
+                    if (map[y][x] == '#') {
+                        val savedTime = checkCheat(map, start, end, x, y, baseTime)
+                        if (savedTime > 0) cheats.add(savedTime)
+                    }
+                }
+            }
+            return cheats
+        }
+
+        private fun checkCheat(
+            map: List<CharArray>,
+            start: Pair<Int, Int>,
+            end: Pair<Int, Int>,
+            x: Int,
+            y: Int,
+            baseTime: Long
+        ): Long {
+            val tempMap = map.map { it.clone() }.toList()
+            tempMap[y][x] = '.'
+            val cheatTime = bfs(tempMap, start, end)
+            return baseTime - cheatTime
+        }
+
+        private fun displayMap(map: List<CharArray>) {
+            if (!DEBUG) return
+            for (row in map) {
+                for (cell in row) {
+                    val color = when (cell) {
+                        'S' -> "\u001B[32m" // Green
+                        'E' -> "\u001B[31m" // Red
+                        '#' -> "\u001B[37m" // White
+                        else -> "\u001B[34m" // Blue
+                    }
+                    print("$color$cell\u001B[0m")
+                }
+                kotlin.io.println()
+            }
+            kotlin.io.println()
         }
 
 
