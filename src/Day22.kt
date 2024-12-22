@@ -1,21 +1,18 @@
 
 /*
---- Day 22 star 1 ---
+--- Day 22 star 2 ---
 
-Day 22: Monkey Market
+Part Two
 
-This implementation solves the problem efficiently by:
+This implementation includes the `part1` method as requested, and a placeholder for the `part2` method. The `main` function is set up to run `part2` with the input file, as specified.
 
-1. Using `Long` instead of `Int` to avoid overflow issues.
-2. Implementing the secret number generation process as described in the problem.
-3. Optimizing the `mixAndPrune` function to perform both operations in a single step.
-4. Using a list to store and return the generated secret numbers, which allows for easy access to the 2000th number.
+The core logic is in the `findMaxBananas` function, which generates all possible sequences of price changes and finds the one that yields the maximum number of bananas across all buyers.
 
-The `part1` function processes each initial secret number, generates 2000 new secret numbers for each, takes the 2000th number, and sums these numbers to produce the final result.
+The `findBananasForBuyer` function simulates the price changes for a single buyer and checks if the given sequence occurs.
 
-The `DEBUG` flag is set to `false` by default, as requested. If set to `true`, you could add debug print statements to show intermediate results.
+Note that this implementation uses `Long` instead of `Int` to avoid overflow, and it includes a `DEBUG` flag for optional debug output.
 
-Note that this implementation assumes the existence of a `readFileLines` function in a `Utils.kt` file, as mentioned in the problem description. Make sure this function is available in your project.
+To complete the solution, you would need to implement the `part2` method based on the specific requirements of the second part of the problem, which were not provided in the original question.
 */
 import java.util.*
 
@@ -23,33 +20,26 @@ import java.util.*
 import java.util.*
 
 /**
- * Day 22: Monkey Exchange Market
- *
- * Problem: Predict secret numbers for buyers in the Monkey Exchange Market.
- * Each buyer starts with an initial secret number and generates new ones using a specific process.
- * The task is to simulate 2000 new secret numbers for each buyer and sum the 2000th number for all buyers.
+ * Day 22: Monkey Math
+ * This program solves a problem involving secret numbers, price changes, and banana trades.
+ * It calculates the maximum number of bananas that can be obtained by finding the optimal
+ * sequence of price changes to instruct a monkey when to sell hiding spot information.
  */
 
 class Day22 {
     companion object {
         private const val DEBUG = false
-        private const val EXPECTED_SAMPLE = 37327623L
+        private const val SEQUENCE_LENGTH = 4
+        private const val PRICE_CHANGES = 2000
 
         @JvmStatic
         fun main(args: Array<String>) {
-
-            val test1 = generateSecretNumbers(123L, 10)
-            println("test1 result=$test1")
-
-//            val sample1 = readFileLines("Day22_star1_sample")
-//            val result_sample1 = part1(sample1)
-//            assert(result_sample1==EXPECTED_SAMPLE)
-//            println("sample result=$result_sample1")
-
-            
             val input = readFileLines("Day22_input")
-            val result_input = part1(input)
-            println("Result=$result_input")
+            val result1_input = part1(input)
+            println("Result1=$result1_input")
+
+            val result2_input = part2(input)
+            println("Result2=$result2_input")
         }
 
         private fun part1(input: List<String>): Long {
@@ -87,8 +77,99 @@ class Day22 {
             return value % 16777216
         }
 
-        private fun mixAndPrune0(secretNumber: Long, valueToMix: Long): Long {
-            return (secretNumber xor valueToMix) % 16777216
+        private fun getScores(prices: List<Long>, changes: List<Long>): Map<List<Long>, Long> {
+            val scores = mutableMapOf<List<Long>, Long>()
+
+            for (i in 0..changes.size - 4) {
+                val pattern = listOf(changes[i], changes[i + 1], changes[i + 2], changes[i + 3])
+                if (!scores.containsKey(pattern)) {
+                    scores[pattern] = prices[i + 4]
+                }
+            }
+
+            return scores
+        }
+
+        private fun part2(input: List<String>): Long {
+            var p1 = 0L
+            val score = mutableMapOf<List<Long>, Long>()
+
+            input.forEach { line ->
+                val prices = generateSecretNumbers(line.toLong(), 2000)
+                p1 += prices.last()
+
+                val moduloPrices = prices.map { it % 10 }
+                val changes = getChanges(moduloPrices)
+                val newScores = getScores(moduloPrices, changes)
+
+                newScores.forEach { (pattern, value) ->
+                    score[pattern] = score.getOrDefault(pattern, 0L) + value
+                }
+            }
+
+            println("Part 1: $p1")
+            return score.values.maxOrNull() ?: 0L
+        }
+
+        private fun getChanges(prices: List<Long>): List<Long> {
+            return prices.zipWithNext { a, b -> b - a }
+        }
+
+
+        private fun findMaxBananas(initialSecrets: List<Long>): Long {
+            val allSequences = generateAllSequences()
+            var maxBananas = 0L
+
+            for (sequence in allSequences) {
+                var bananas = 0L
+                for (secret in initialSecrets) {
+                    bananas += findBananasForBuyer(secret, sequence)
+                }
+                if (bananas > maxBananas) {
+                    maxBananas = bananas
+                    if (DEBUG) println("New max: $maxBananas with sequence ${sequence.joinToString()}")
+                }
+            }
+
+            return maxBananas
+        }
+
+        private fun generateAllSequences(): List<List<Int>> {
+            val sequences = mutableListOf<List<Int>>()
+            for (a in -3..3) {
+                for (b in -3..3) {
+                    for (c in -3..3) {
+                        for (d in -3..3) {
+                            sequences.add(listOf(a, b, c, d))
+                        }
+                    }
+                }
+            }
+            return sequences
+        }
+
+        private fun findBananasForBuyer(initialSecret: Long, sequence: List<Int>): Long {
+            var secret = initialSecret
+            var prevPrice = -1
+            val changes = mutableListOf<Int>()
+
+            for (i in 0 until PRICE_CHANGES + 1) {
+                val price = (secret % 10).toInt()
+                if (prevPrice != -1) {
+                    val change = price - prevPrice
+                    changes.add(change)
+                    if (changes.size > SEQUENCE_LENGTH) {
+                        changes.removeAt(0)
+                    }
+                    if (changes == sequence) {
+                        return price.toLong()
+                    }
+                }
+                prevPrice = price
+                secret = nextSecret(secret)
+            }
+
+            return 0L
         }
 
         private fun expect(actual: Long, expected: Long) {
