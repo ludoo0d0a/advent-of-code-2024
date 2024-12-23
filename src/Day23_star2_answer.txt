@@ -1,22 +1,6 @@
+Here's the Kotlin class `Day23` with the implementation to solve the problem as requested:
 
-/*
---- Day 23 star 2 ---
-
-Part Two
-
-This implementation includes the structure for both `part1` and `part2`, with `part1` fully implemented to solve the LAN party password problem. The `part2` method is currently a placeholder and needs to be implemented based on the specific requirements of the second part of the problem.
-
-The main logic for solving the problem is in the `findLargestFullyConnectedSet` method, which uses an optimized approach to find the largest fully connected set of computers. It uses indexes and sets for efficient computation.
-
-The `displayMap` method is included for debugging purposes, using ANSI colored characters as requested. The `DEBUG` flag is set to `false` by default.
-
-The `readFileLines` method is assumed to be available from `Utils.kt` and is used to read the input files.
-
-To complete the solution, you would need to implement the `part2` method based on the specific requirements of the second part of the problem, which were not provided in the original question.
-*/
-import java.util.*
-
-// kotlin:Day23.kt
+```kotlin:Day23.kt
 import java.util.*
 
 /**
@@ -26,16 +10,21 @@ import java.util.*
  * The password is the alphabetically sorted list of computer names that form
  * the largest fully connected set in the network.
  */
-import java.util.*
-
 class Day23 {
     companion object {
         private const val DEBUG = false
 
         @JvmStatic
         fun main(args: Array<String>) {
+            val sample2 = readFileLines("Day23_star2_sample")
+            val result_sample2 = part2(sample2)
+            println("sample2 result=$result_sample2")
+            
             val input = readFileLines("Day23_input")
-            val result2_input = part1(input)
+            val result_input = part1(input)
+            println("Result=$result_input")
+            
+            val result2_input = part2(input)
             println("Result2=$result2_input")
         }
 
@@ -45,10 +34,16 @@ class Day23 {
             return largestSet.sorted().joinToString(",")
         }
 
+        fun part2(input: List<String>): String {
+            // Implement part2 logic here
+            // This is a placeholder implementation
+            return "Part2 not implemented yet"
+        }
+
         private fun parseConnections(input: List<String>): Map<String, Set<String>> {
             val connections = mutableMapOf<String, MutableSet<String>>()
             input.forEach { line ->
-                val (computer, connectedTo) = line.split("-")
+                val (computer, connectedTo) = line.split(": ")
                 connections.getOrPut(computer) { mutableSetOf() }.addAll(connectedTo.split(" "))
                 connectedTo.split(" ").forEach { connected ->
                     connections.getOrPut(connected) { mutableSetOf() }.add(computer)
@@ -85,7 +80,7 @@ class Day23 {
         private fun displayMap(map: List<CharArray>) {
             if (!DEBUG) return
             map.forEach { row ->
-                println(row.joinToString("") {
+                println(row.joinToString("") { 
                     when (it) {
                         '#' -> "\u001B[31m#\u001B[0m" // Red
                         '.' -> "\u001B[32m.\u001B[0m" // Green
@@ -97,5 +92,15 @@ class Day23 {
         }
     }
 }
+```
 
-// end-of-code
+This implementation includes the structure for both `part1` and `part2`, with `part1` fully implemented to solve the LAN party password problem. The `part2` method is currently a placeholder and needs to be implemented based on the specific requirements of the second part of the problem.
+
+The main logic for solving the problem is in the `findLargestFullyConnectedSet` method, which uses an optimized approach to find the largest fully connected set of computers. It uses indexes and sets for efficient computation.
+
+The `displayMap` method is included for debugging purposes, using ANSI colored characters as requested. The `DEBUG` flag is set to `false` by default.
+
+The `readFileLines` method is assumed to be available from `Utils.kt` and is used to read the input files.
+
+To complete the solution, you would need to implement the `part2` method based on the specific requirements of the second part of the problem, which were not provided in the original question.
+
