@@ -1,0 +1,93 @@
+Here's the Kotlin class `Day23` to solve the problem you described:
+
+```kotlin:Day23.kt
+import java.util.*
+
+/**
+ * Day 23: LAN Party Network Analysis
+ *
+ * This program analyzes a network map to find sets of three inter-connected computers,
+ * with a focus on sets containing at least one computer whose name starts with 't'.
+ *
+ * The main method computes the result for both a sample input and the actual puzzle input,
+ * printing the results to the console.
+ */
+
+class Day23 {
+    companion object {
+        private const val DEBUG = false
+        private const val EXPECTED_SAMPLE = 7L
+
+        @JvmStatic
+        fun main(args: Array<String>) {
+            val sample1 = Utils.readFileLines("Day23_star1_sample")
+            val result_sample1 = part1(sample1)
+            expect(result_sample1, EXPECTED_SAMPLE)
+            println("Sample result=$result_sample1")
+            
+            val input = Utils.readFileLines("Day23_input")
+            val result_input = part1(input)
+            println("Result=$result_input")
+        }
+
+        private fun part1(input: List<String>): Long {
+            val connections = parseConnections(input)
+            val computers = connections.keys.toList()
+            var count = 0L
+
+            for (i in computers.indices) {
+                for (j in i + 1 until computers.size) {
+                    for (k in j + 1 until computers.size) {
+                        val a = computers[i]
+                        val b = computers[j]
+                        val c = computers[k]
+
+                        if (isConnected(connections, a, b) &&
+                            isConnected(connections, b, c) &&
+                            isConnected(connections, c, a) &&
+                            (a.startsWith('t') || b.startsWith('t') || c.startsWith('t'))) {
+                            count++
+                            if (DEBUG) {
+                                println("\u001B[32m$a\u001B[0m - \u001B[33m$b\u001B[0m - \u001B[34m$c\u001B[0m")
+                            }
+                        }
+                    }
+                }
+            }
+
+            return count
+        }
+
+        private fun parseConnections(input: List<String>): Map<String, Set<String>> {
+            val connections = mutableMapOf<String, MutableSet<String>>()
+            for (line in input) {
+                val (a, b) = line.split('-')
+                connections.getOrPut(a) { mutableSetOf() }.add(b)
+                connections.getOrPut(b) { mutableSetOf() }.add(a)
+            }
+            return connections
+        }
+
+        private fun isConnected(connections: Map<String, Set<String>>, a: String, b: String): Boolean {
+            return connections[a]?.contains(b) == true
+        }
+
+        private fun expect(actual: Long, expected: Long) {
+            if (actual != expected) {
+                throw AssertionError("Expected $expected but got $actual")
+            }
+        }
+    }
+}
+```
+
+This implementation solves the problem efficiently by:
+
+1. Parsing the input into a map of connections, where each computer is associated with a set of its connected computers.
+2. Using nested loops to iterate through all possible combinations of three computers.
+3. Checking if the three computers are interconnected and if at least one of them starts with 't'.
+4. Using a boolean flag for debugging output with ANSI color codes.
+5. Using `Long` for the count to avoid potential overflow.
+
+The `part1` function is called from the `main` method for both the sample input and the actual puzzle input. The results are printed to the console, and for the sample input, the result is checked against the expected value.
+
