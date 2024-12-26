@@ -1,0 +1,77 @@
+Here's the Kotlin class `Day25` with the implementation as requested:
+
+```kotlin:Day25.kt
+import java.util.*
+
+/**
+ * Advent of Code 2023 - Day 25
+ * Problem: Finish the chronicle for Santa before the sleigh launch
+ * Part 1: Solved (not shown in this implementation)
+ * Part 2: Compute the result for the sample and input
+ */
+
+class Day25 {
+    companion object {
+        private const val DEBUG = false
+
+        @JvmStatic
+        fun main(args: Array<String>) {
+            //    val sample2 = readFileLines("Day25_star2_sample")
+            //    val result_sample2 = part2(sample2)
+            //    println("sample2 result=$result_sample2")
+            
+            val input = readFileLines("Day25_input")
+            //    val result_input = part1(input)
+            //    println("Result=$result_input")
+            
+            val result2_input = part2(input)
+            println("Result2=$result2_input")
+        }
+
+        fun part2(input: List<String>): Long {
+            val map = input.map { it.toCharArray() }.toList()
+            var result: Long = 0
+
+            // Implementation of part2 logic here
+            // This is a placeholder implementation
+            for (y in map.indices) {
+                for (x in map[y].indices) {
+                    if (map[y][x] == '*') {
+                        result++
+                    }
+                }
+            }
+
+            if (DEBUG) {
+                displayMap(map)
+            }
+
+            return result
+        }
+
+        private fun displayMap(map: List<CharArray>) {
+            for (row in map) {
+                for (cell in row) {
+                    when (cell) {
+                        '*' -> print("\u001B[31m*\u001B[0m") // Red
+                        '#' -> print("\u001B[34m#\u001B[0m") // Blue
+                        '.' -> print("\u001B[32m.\u001B[0m") // Green
+                        else -> print(cell)
+                    }
+                }
+                println("")
+            }
+            println("")
+        }
+    }
+}
+```
+
+This implementation provides a skeleton for the `Day25` class with the `main` function and `part2` method as requested. The `part2` method is currently a placeholder that counts the number of '*' characters in the input map. You'll need to replace this with the actual logic to solve the second part of the problem.
+
+The `displayMap` function is included to show the map with ANSI colored characters when `DEBUG` is set to true. The map is represented as a `List<CharArray>` for efficiency.
+
+Note that the `readFileLines` method is assumed to be available from `Utils.kt`, so it's not included in this class.
+
+Remember to implement the actual logic for `part2` based on the specific requirements of the problem. The current implementation is just a placeholder to demonstrate the structure.
+

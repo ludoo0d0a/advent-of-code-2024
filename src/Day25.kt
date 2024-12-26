@@ -34,6 +34,8 @@ import java.util.*
  * lock/key pairs fit together without overlapping in any column.
  */
 
+typealias Cave = Array<CharArray>
+
 class Day25 {
     companion object {
         private const val DEBUG = false
@@ -47,11 +49,11 @@ class Day25 {
 //            println("sample result=$result_sample1")
             
             val input = readFileLines("Day25_input")
-            val result_input = part1(input)
+            val result_input = part1a(input)
             println("Result=$result_input")
         }
 
-        private fun part1(input: List<String>): Long {
+        private fun part1a(input: List<String>): Long {
             val (locks, keys) = parseInput(input)
             var validPairs = 0L
 
@@ -64,6 +66,36 @@ class Day25 {
             }
 
             return validPairs
+        }
+
+        fun List<String>.toCave(): Cave = map { line -> line.toCharArray() }.toTypedArray()
+
+        fun List<String>.parse(): Pair<List<String>, List<String>> {
+            val (locks, keys) = joinToString("\n").split("\n\n").partition { it.startsWith("#####") }
+            return locks to keys
+        }
+
+        fun part1(input: List<String>): Int {
+            val x = 0..4
+            val y = 0..6
+            val parsed = input.parse()
+            val locks = parsed.first.map { it.split("\n").toCave() }
+            val keys = parsed.second.map { it.split("\n").toCave() }
+            val free = locks.map { lock ->
+                x.map { x ->
+                    y.count { y -> lock[y][x] == '.' }
+                }
+            }
+            val used = keys.map { lock ->
+                x.map { x ->
+                    y.count { y -> lock[y][x] == '#' } - 1
+                }
+            }
+            return used.sumOf { key ->
+                free.count { lock ->
+                    key.zip(lock).all { it.second - it.first > 0 }
+                }
+            }
         }
 
         private fun parseInput(input: List<String>): Pair<List<List<Int>>, List<List<Int>>> {
