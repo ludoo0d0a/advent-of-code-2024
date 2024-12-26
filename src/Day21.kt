@@ -64,6 +64,9 @@ class Day21 {
             val input = readFileLines("Day21_input")
             val result_input = part1(input)
             println("Result=$result_input")
+
+            val result2_input = part2(input)
+            println("Result2=$result2_input")
         }
 
         private fun part1(input: List<String>): Long {
