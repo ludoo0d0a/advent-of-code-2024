@@ -37,11 +37,6 @@ class Day21 {
         private const val DEBUG = true
         private const val EXPECTED_SAMPLE = 126384L
 
-        data class Index(val x: Int, val y: Int)
-        operator fun Index.plus(other: Index) = Index(x + other.x, y + other.y)
-        operator fun Index.minus(other: Index) = Index(x - other.x, y - other.y)
-        operator fun Index.times(multiplier: Int) = Index(x * multiplier, y * multiplier)
-
         private val numericKeypad = listOf(
             "789".toCharArray(),
             "456".toCharArray(),

@@ -30,10 +30,12 @@ class Day20 {
         private const val DEBUG = false
         private const val EXPECTED_SAMPLE = 285 // Update this with the correct expected value
 
+        data class Path20(val to: Index, val cost: Int)
+
         @JvmStatic
         fun main(args: Array<String>) {
             val sample2 = readFileLines("Day20_star2_sample")
-            val result_sample2 = part2(sample2)
+            val result_sample2 = part2(sample2, 50)
             println("sample2 result=$result_sample2")
 
             val input = readFileLines("Day20_input")
@@ -155,40 +157,47 @@ class Day20 {
             throw IllegalStateException("End not found")
         }
 
-        fun part2(input: List<String>): Long {
-            val grid = input.map { it.toCharArray() }.toTypedArray()
-            val start = findStart(grid.toList())
-            val end = findEnd(grid.toList())
+        private fun part2(input: List<String>, minSave: Int = 100): Int {
+            var start = Index(0, 0)
+            for ((y, line) in input.withIndex()) for (x in line.indices) if (line[x] == 'S') start = Index(x, y)
+            var end = Index(0, 0)
+            for ((y, line) in input.withIndex()) for (x in line.indices) if (line[x] == 'E') end = Index(x, y)
+            return solve(input, start, end, minSave, 20)
+        }
 
-            // Use priority queue to find shortest paths first
-            val queue = PriorityQueue<State>(compareBy { it.time })
-            val visited = mutableSetOf<Triple<Int, Int, Int>>()
-            val validCheats = mutableListOf<Long>()
-
-            queue.offer(State(start.first, start.second, 0, 0))
-
-            while (queue.isNotEmpty()) {
-                val current = queue.poll()
-
-                if (current.x to current.y == end) {
-                    val timeSaved = calculateTimeSaved(current.cheatLength)
-                    if (timeSaved >= 100) validCheats.add(timeSaved)
-                    continue
-                }
-
-                val key = Triple(current.x, current.y, current.cheatLength)
-                if (key in visited) continue
-                visited.add(key)
-
-                if (current.cheatLength < 20) {
-                    // Try all valid neighbors
-                    for ((nx, ny) in getValidNeighbors(grid, current.x, current.y)) {
-                        queue.offer(State(nx, ny, current.time + 1, current.cheatLength + 1))
-                    }
+        private fun solve(grid: List<String>, start: Index, end: Index, minSave: Int, maxCheat: Int): Int {
+            val bound = Rect(0..grid[0].lastIndex, 0..grid.lastIndex)
+            val fromStart = walk(grid, start)
+            val fromEnd = walk(grid, end)
+            val normalTime = fromStart.getValue(end)
+            var count = 0
+            for (y in bound.y) for (x in bound.x) {
+                if (grid[y][x] == '#') continue
+                val index = Index(x, y)
+                for (yy in -maxCheat..maxCheat) for (xx in -maxCheat..maxCheat) {
+                    val twin = Index(index.x + xx, index.y + yy)
+                    if (twin !in bound || grid[twin.y][twin.x] == '#') continue
+                    val distance = index.manhattanDistanceTo(twin)
+                    if (distance == 0 || distance > maxCheat) continue
+                    val newTime = fromStart.getValue(index) + distance + fromEnd.getValue(twin)
+                    if (normalTime - newTime >= minSave) count++
                 }
             }
+            return count
+        }
 
-            return validCheats.size.toLong()
+        private fun walk(grid: List<String>, start: Index): Map<Index, Int> = buildMap {
+            val bound = Rect(0..grid[0].lastIndex, 0..grid.lastIndex)
+            val pq = PriorityQueue<Path20> { a, b -> a.cost - b.cost }
+            pq.offer(Path20(start, 0))
+            while (pq.isNotEmpty()) {
+                val (to, cost) = pq.poll()
+                if (putIfAbsent(to, cost) != null) continue
+                for (d in Directions.Cardinal) {
+                    val next = to + d
+                    if (next in bound && next !in this && grid[next.y][next.x] != '#') pq.offer(Path20(next, cost + 1))
+                }
+            }
         }
 
         private data class State(val x: Int, val y: Int, val time: Int, val cheatLength: Int)
