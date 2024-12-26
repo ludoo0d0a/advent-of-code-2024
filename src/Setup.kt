@@ -524,6 +524,7 @@ $code
                 val response = setup.runProgram()
                 println(response)
             } else if (arguments.containsKey("prompt")) {
+                // Change your prompt from the file, and request it again
                 val submitAnswer = arguments.containsKey("submit")
                 println(">>Request prompt day $day star $star - submitAnswer: $submitAnswer")
                 val response = setup.promptFromFile(submitAnswer)
