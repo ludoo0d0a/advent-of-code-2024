@@ -18,7 +18,7 @@ class Day19 {
             println("Sample result: ${part1(sample)}")
 
             val input = readFileLines("Day19_input")
-//            println("Result: ${part1(input)}")
+            println("Result: ${part1(input)}")
             println("Result: ${part2(input)}")
         }
 
@@ -27,8 +27,18 @@ class Day19 {
             val designs = parseDesigns(input)
             return designs.count { design -> isDesignPossible(design, patterns) }
         }
+        // part1bis like part2
+        fun part1bis(input: List<String>): Int {
+            val patterns = parsePatterns(input)
+            val designs = parseDesigns(input)
+            val cache = hashMapOf("" to 1L)
+            fun options(d: String): Long = cache.getOrPut(d) {
+                patterns.sumOf { if (d.startsWith(it)) options(d.substring(it.length)) else 0L }
+            }
+            return designs.count { options(it) > 0 }
+        }
 
-        fun part2(input: List<String>): Int {
+        fun part2_failed(input: List<String>): Int {
             val patterns = parsePatterns(input)
             val designs = parseDesigns(input)
 
@@ -37,6 +47,18 @@ class Day19 {
                 println("Design: $design -> $count arrangements")
                 count
             }
+        }
+
+        // source https://github.com/kingsleyadio/adventofcode/blob/main/src/com/kingsleyadio/adventofcode/y2024/Day19.kt
+        fun part2(input: List<String>): Long {
+            val patterns = parsePatterns(input)
+            val designs = parseDesigns(input)
+
+            val cache = hashMapOf("" to 1L)
+            fun options(d: String): Long = cache.getOrPut(d) {
+                patterns.sumOf { if (d.startsWith(it)) options(d.substring(it.length)) else 0L }
+            }
+            return designs.sumOf { options(it) }
         }
 
         private fun countArrangements(design: String, patterns: Set<String>, currentPath: List<String> = emptyList()): Int {
