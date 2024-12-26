@@ -1,4 +1,5 @@
 import java.util.*
+import kotlin.math.max
 
 class Day24(input: List<String>) {
     companion object {
@@ -16,9 +17,8 @@ class Day24(input: List<String>) {
             val result_input = Day24(input).part1()
             println("Result=$result_input")
 
-            val result_input2 = Day24(input).part2()
-            println("Result2=$result_input2")
-
+            val content = readFileContent("Day24_input")
+            println("Part 2: ${Day24(input).part2(content)}")
         }
     }
 
@@ -36,47 +36,246 @@ class Day24(input: List<String>) {
             .toLong(2)
     }
 
-    fun part2(): Long {
-        val (xBits, yBits) = parseBits()
-        val correctedSystem = correctSystem(xBits, yBits)
-        return addBinaryNumbers(correctedSystem.first, correctedSystem.second)
-    }
 
-    private fun parseBits(): Pair<List<Boolean>, List<Boolean>> {
-        val xBits = mutableListOf<Boolean>()
-        val yBits = mutableListOf<Boolean>()
-        wires.forEach { (wire, value) ->
-            when {
-                wire.startsWith("x") -> xBits.add(value == 1)
-                wire.startsWith("y") -> yBits.add(value == 1)
+    private fun part2(input: String): String {
+        val inputWires = mutableMapOf<String, Int>()
+        val formulas = mutableMapOf<String, String>()
+        val zWires = mutableSetOf<String>()
+        val allWires = mutableSetOf<String>()
+        var highBit: Int? = null
+
+        val (lines1, lines2) = input.split("\n\n")
+        for (line in lines1.split("\n")) {
+            val (wire, valueStr) = line.split(": ")
+            val value = valueStr.toInt()
+            inputWires[wire] = value
+            allWires += wire
+        }
+        for (line in lines2.split("\n")) {
+            val (formula, wire) = line.split(" -> ")
+            formulas[wire] = formula
+            allWires += wire
+            if (wire.startsWith("z")) {
+                zWires += wire
+                val index = wire.removePrefix("z").toInt()
+                highBit = if (highBit == null) index else max(index, highBit)
             }
         }
 
-        return Pair(xBits, yBits)
-    }
+        val argsHighBit = highBit!! - 1
+        val resHighBit = highBit
 
-    private fun correctSystem(xBits: List<Boolean>, yBits: List<Boolean>): Pair<List<Boolean>, List<Boolean>> {
-        // In a real implementation, this function would apply the corrections
-        // identified in part 1. For now, we'll just return the input as-is.
-        return Pair(xBits, yBits)
-    }
+        val cachedWires = mutableMapOf<String, Int>()
+        val involvedWires = mutableSetOf<String>()
+        fun calcValue(w: String, swaps: Map<String, String>): Int? {
+            val wire = if (w in swaps) {
+                swaps[w]!!
+            } else {
+                w
+            }
+            involvedWires += wire
+            if (wire in inputWires) {
+                return inputWires[wire]!!
+            }
+            if (wire in cachedWires) {
+                if (cachedWires[wire] == -1) {
+                    return null
+                }
+                return cachedWires[wire]!!
+            }
+            cachedWires[wire] = -1
+            if (wire in formulas) {
+                val formula = formulas[wire]!!
+                when {
+                    formula.contains(" AND ") -> {
+                        val (w1, w2) = formula.split(" AND ")
+                        val value1 = calcValue(w1, swaps) ?: return null
+                        val value2 = calcValue(w2, swaps) ?: return null
+                        val value = value1 and value2
+                        cachedWires[wire] = value
+                        return value
+                    }
 
-    private fun addBinaryNumbers(x: List<Boolean>, y: List<Boolean>): Long {
-        var result = 0L
-        var carry = 0
+                    formula.contains(" OR ") -> {
+                        val (w1, w2) = formula.split(" OR ")
+                        val value1 = calcValue(w1, swaps) ?: return null
+                        val value2 = calcValue(w2, swaps) ?: return null
+                        val value = value1 or value2
+                        cachedWires[wire] = value
+                        return value
+                    }
 
-        for (i in x.indices.reversed()) {
-            val sum = (if (x[i]) 1 else 0) + (if (y[i]) 1 else 0) + carry
-            result = result or ((sum and 1).toLong() shl (x.size - 1 - i))
-            carry = sum shr 1
+                    formula.contains(" XOR ") -> {
+                        val (w1, w2) = formula.split(" XOR ")
+                        val value1 = calcValue(w1, swaps) ?: return null
+                        val value2 = calcValue(w2, swaps) ?: return null
+                        val value = value1 xor value2
+                        cachedWires[wire] = value
+                        return value
+                    }
+
+                    else -> throw IllegalStateException("invalid formula $formula for $wire")
+                }
+            }
+            throw IllegalStateException("no formula for $wire")
         }
 
-        if (carry > 0) {
-            result = result or (1L shl x.size)
+        fun xWires() = inputWires.filterKeys { it.startsWith("x") }.keys
+        fun yWires() = inputWires.filterKeys { it.startsWith("y") }.keys
+
+        fun formatZName(index: Int) = "z${String.format("%02d", index)}"
+        fun formatXName(index: Int) = "x${String.format("%02d", index)}"
+        fun formatYName(index: Int) = "y${String.format("%02d", index)}"
+
+        fun startTests(allSwaps: Map<String, String>, checkBit: Int): Boolean {
+            for (xValue in 0..3) {
+                for (yValue in 0..3) {
+
+                    var xBinaryString = ""
+                    var rx = 0
+                    while (rx <= argsHighBit) {
+                        if (rx == checkBit - 1) {
+                            val xBin = xValue.toString(2)
+                            xBinaryString = xBin + xBinaryString
+                            rx += xBin.length
+                        } else {
+                            xBinaryString = "0$xBinaryString"
+                            ++rx
+                        }
+                    }
+
+                    val x = java.lang.Long.parseLong(xBinaryString, 2)
+                    for (index in 0..argsHighBit) {
+                        inputWires[formatXName(index)] = xBinaryString[xBinaryString.lastIndex - index] - '0'
+                    }
+
+                    var yBinaryString = ""
+                    var ry = 0
+                    while (ry <= argsHighBit) {
+                        if (ry == checkBit - 1) {
+                            val yBin = yValue.toString(2)
+                            yBinaryString = yBin + yBinaryString
+                            ry += yBin.length
+                        } else {
+                            yBinaryString = "0$yBinaryString"
+                            ++ry
+                        }
+                    }
+
+                    val y = java.lang.Long.parseLong(yBinaryString, 2)
+                    for (index in 0..argsHighBit) {
+                        inputWires[formatYName(index)] = yBinaryString[yBinaryString.lastIndex - index] - '0'
+                    }
+
+                    val z = x + y
+                    var expectedBinaryString = z.toString(2)
+                    for (index in expectedBinaryString.length..resHighBit) {
+                        expectedBinaryString = "0$expectedBinaryString"
+                    }
+                    cachedWires.clear()
+                    involvedWires.clear()
+                    var actualBinaryString = ""
+                    for (zWire in zWires.toList().sortedDescending()) {
+                        val value = calcValue(zWire, allSwaps) ?: return false
+                        actualBinaryString += value
+                    }
+
+                    val hasCorruptedBits = expectedBinaryString != actualBinaryString
+                    if (hasCorruptedBits) {
+                        return false
+                    }
+                }
+            }
+            return true
         }
 
-        return result
+        fun findGoodSwaps(allSwaps: Map<String, String>, checkBit: Int): Set<Pair<String, String>> {
+            cachedWires.clear()
+            involvedWires.clear()
+            calcValue(formatZName(checkBit), allSwaps)
+
+            val possibleBrokenWires = involvedWires.toMutableSet()
+            possibleBrokenWires += formatZName(checkBit + 1)
+
+            cachedWires.clear()
+            involvedWires.clear()
+            for (i in 0..<checkBit) {
+                calcValue(formatZName(i), allSwaps)
+            }
+            val correctWires = involvedWires.toSet()
+
+            possibleBrokenWires -= correctWires
+            possibleBrokenWires -= xWires()
+            possibleBrokenWires -= yWires()
+            possibleBrokenWires -= allSwaps.keys
+
+            val possibleFixingWires = mutableSetOf<String>().apply {
+                this += allWires
+                this -= correctWires
+                this -= xWires()
+                this -= yWires()
+                this -= allSwaps.keys
+                this -= possibleBrokenWires
+                this -= zWires
+            }
+
+            val goodSwaps = mutableSetOf<Pair<String, String>>()
+            for (ps1 in possibleBrokenWires) {
+                for (ps2 in possibleFixingWires) {
+                    val success = startTests(mutableMapOf<String, String>().apply {
+                        this += allSwaps
+                        this += mapOf(ps1 to ps2, ps2 to ps1)
+                    }, checkBit)
+                    if (success) {
+                        goodSwaps += ps1 to ps2
+                    }
+                }
+            }
+
+            return goodSwaps
+        }
+
+        fun findAllSwaps(allSwaps: Map<String, String>, r: Int): Map<String, String> {
+            println("considering $allSwaps $r")
+
+            if (r > argsHighBit) {
+                return allSwaps
+            }
+
+            val success = startTests(allSwaps, r)
+            if (success) {
+                return findAllSwaps(allSwaps, r + 1)
+            }
+
+            val goodSwaps = findGoodSwaps(allSwaps, r)
+
+            for ((swap1, swap2) in goodSwaps) {
+                val checkAllSwaps = mutableMapOf<String, String>().apply {
+                    this += allSwaps;this[swap1] = swap2;this[swap2] = swap1
+                }
+                val result = findAllSwaps(checkAllSwaps, r + 1)
+                if (result.isNotEmpty()) {
+                    return result
+                }
+            }
+
+            return emptyMap()
+        }
+
+        val allSwaps = findAllSwaps(emptyMap(), 0)
+        println("solution is $allSwaps")
+
+        for (r in 0..argsHighBit) {
+            val success = startTests(allSwaps, r)
+            if (!success) {
+                println("tests failed for bit $r")
+            }
+        }
+
+        return allSwaps.keys.toList().sorted().joinToString(",")
     }
+
+
 
         private fun simulate() {
             while (gates.isNotEmpty()) {
