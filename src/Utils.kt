@@ -1,9 +1,13 @@
+import java.io.BufferedReader
 import java.math.BigInteger
 import java.security.MessageDigest
 import kotlin.io.path.Path
 import kotlin.io.path.readText
 import java.io.File
+import kotlin.io.path.inputStream
 import kotlin.math.abs
+
+fun readInput(name: String): BufferedReader = Path("src/$name.txt").inputStream().bufferedReader()
 
 fun readFileContent(name: String) = Path("src/$name.txt").readText().trim().replace("\r","")
 
@@ -58,6 +62,12 @@ fun parseArgs(args: Array<String>): Map<String, String> {
             key to value
         }
         .toMap()
+}
+
+fun expect(actual: Any, expected: Any) {
+    if (actual != expected) {
+        throw AssertionError("Expected $expected, but got $actual")
+    }
 }
 
 // source https://github.com/kingsleyadio/adventofcode/blob/main/src/com/kingsleyadio/adventofcode/util/DS.kt
